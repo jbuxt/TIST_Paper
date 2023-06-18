@@ -68,6 +68,7 @@ for y in range(start_yr, end_yr+1):
             pass #don't have those times 
         else:
             im_count += 1
+            print('im_count: ', im_count)
             date = str(y)+'-'+str(m).zfill(2) #Use this to match the column names in the dataframe
             fname = str(y)+str(m).zfill(2)+'01'+ '.tif'#files are named by the month 
             im = rs.open(os.path.join(dirname, fname))
@@ -131,7 +132,7 @@ with open('precip_Embu.pkl', 'wb') as f:
 
 with open('precip_pixels.pkl', 'wb') as file:
     pickle.dump([precip_df, precip_meta, precip_bound], file)
-    
+
 print('done with precip')                   
 
 # now veg 
