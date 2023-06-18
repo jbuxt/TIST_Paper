@@ -50,6 +50,9 @@ end_yr = 2023
 # n_Nyeri = 3733796
 # n_Kirinyaga = 1652252
 # n_Embu = 3170195
+rows = 6871
+cols = 8786
+chunk =  cols * 500
 n_ROI = 30104272
 n_months = 120 
 
@@ -58,7 +61,7 @@ dirname = './GEE_Precip'
 date_list = pd.date_range(start='5/1/2013', periods=120, freq='MS')
 col_names = ['row','col', 'tist', 'county']+([date.strftime('%Y-%m') for date in date_list])
 
-precip_df= pd.DataFrame(index=range(n_ROI), columns=col_names)
+precip_df= pd.DataFrame(index=range(500),columns=col_names)
 
 im_count = 0
 
@@ -80,9 +83,9 @@ for y in range(start_yr, end_yr+1):
             im.close()
             # does float 16 work for ndvi? mayhaps
             
-            rows, cols = np.shape(im_array)
+            # rows, cols = np.shape(im_array)
             p = 0 #pixel count 
-            for i in range(65, rows): #know that first image is at row 67
+            for i in range(500): #0-500 done
                 for j in range(cols):
                     if county_mask[i, j] != 0: #if it's in region of interest
                         if im_count == 1: #this is the first image
@@ -112,28 +115,28 @@ for y in range(start_yr, end_yr+1):
     ## 5 = Kirinyaga (28) 
     ## 6 = Embu (29)
 
-with open('precip_Laikipia.pkl', 'wb') as f:
-    pickle.dump([precip_df.loc[precip_df['county'] == 1], precip_meta, precip_bound], f)
+# with open('precip_Laikipia.pkl', 'wb') as f:
+#     pickle.dump([precip_df.loc[precip_df['county'] == 1], precip_meta, precip_bound], f)
 
-with open('precip_Meru.pkl', 'wb') as f:
-    pickle.dump([precip_df.loc[precip_df['county'] == 2], precip_meta, precip_bound], f)
+# with open('precip_Meru.pkl', 'wb') as f:
+#     pickle.dump([precip_df.loc[precip_df['county'] == 2], precip_meta, precip_bound], f)
 
-with open('precip_Tharaka.pkl', 'wb') as f:
-    pickle.dump([precip_df.loc[precip_df['county'] == 3], precip_meta, precip_bound], f)
+# with open('precip_Tharaka.pkl', 'wb') as f:
+#     pickle.dump([precip_df.loc[precip_df['county'] == 3], precip_meta, precip_bound], f)
 
-with open('precip_Nyeri.pkl', 'wb') as f:
-    pickle.dump([precip_df.loc[precip_df['county'] == 4], precip_meta, precip_bound], f)
+# with open('precip_Nyeri.pkl', 'wb') as f:
+#     pickle.dump([precip_df.loc[precip_df['county'] == 4], precip_meta, precip_bound], f)
     
-with open('precip_Kirinyaga.pkl', 'wb') as f:
-    pickle.dump([precip_df.loc[precip_df['county'] == 5], precip_meta, precip_bound], f)
+# with open('precip_Kirinyaga.pkl', 'wb') as f:
+#     pickle.dump([precip_df.loc[precip_df['county'] == 5], precip_meta, precip_bound], f)
 
-with open('precip_Embu.pkl', 'wb') as f:
-    pickle.dump([precip_df.loc[precip_df['county'] == 6], precip_meta, precip_bound], f)
+# with open('precip_Embu.pkl', 'wb') as f:
+#     pickle.dump([precip_df.loc[precip_df['county'] == 6], precip_meta, precip_bound], f)
 
-with open('precip_pixels.pkl', 'wb') as file:
+with open('precip_pixels_row500.pkl', 'wb') as file:
     pickle.dump([precip_df, precip_meta, precip_bound], file)
 
-print('done with precip')                   
+print('done with precip first 500')                   
 
 # now veg 
 
