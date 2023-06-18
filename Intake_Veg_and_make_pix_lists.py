@@ -13,23 +13,7 @@ import rasterio as rs
 import numpy as np
 import os
 import pickle
-from datetime import datetime as dt
-
-#################################################
-# Define pixel through time class 
-#################################################
-class Pix:
-
-    def __init__(self, row, col, county, tist, first_ts_pt):
-        self.row = row
-        self.col = col
-        self.county = county
-        self.tist = tist
-        self.ts = [first_ts_pt]
-
-    def add(self, new_val):
-        self.ts.append(new_val)
-    
+from datetime import datetime as dt    
 
 #################################################
 # Import county and tist masks 
@@ -59,49 +43,58 @@ with open('tist_mask.pkl', 'rb') as file:
 start_yr = 2013
 end_yr = 2023
 
-#Precipitation 
+# #Number of pixels in each county: 
+# n_Laikipia = 10837687 
+# n_Meru = 7720270
+# n_Theraka = 2990072
+# n_Nyeri = 3733796
+# n_Kirinyaga = 1652252
+# n_Embu = 3170195
+n_ROI = 30104272
+n_months = 120 
+
+#Precipitation #####################################################3 
 dirname = './GEE_Precip'
-date_list = []
+date_list = pd.date_range(start='5/1/2013', periods=120, freq='MS')
+col_names = ['row','col', 'tist', 'county']+([date.strftime('%Y-%m') for date in date_list])
+
+precip_df= pd.DataFrame(index=range(n_ROI), columns=col_names)
+
 im_count = 0
-#can really only do one at a time. CHANGE THIS and names to save to 
-sel_county = 3
-precip_pix = []
+
 for y in range(start_yr, end_yr+1):
     for m in range(1, 13):
         if ((y == 2013) and (m < 5)) or ((y == 2023) and (m > 4)):
             pass #don't have those times 
         else:
             im_count += 1
-            date = str(y)+str(m).zfill(2)+'01'
-            fname = date + '.tif'#files are named by the month 
-            date = dt.strptime(date, '%Y%m%d')
-            date_list.append(date)
+            date = str(y)+'-'+str(m).zfill(2) #Use this to match the column names in the dataframe
+            fname = str(y)+str(m).zfill(2)+'01'+ '.tif'#files are named by the month 
             im = rs.open(os.path.join(dirname, fname))
             precip_meta = im.meta
             precip_bound = im.bounds
-            im_array = np.float16(im.read(1)) #only one band in precip data - if wanted can specify band as read(1) to get 2d array
+            im_array = np.float16(im.read(1)) 
             #for precip data, don't care about 4 decimal places in mm per month
             # one or two decimals is fine
             im.close()
             # does float 16 work for ndvi? mayhaps
-            # PRE_DEFINE THE LIST SIZE? or tell it what region to start looking in? 
             
             rows, cols = np.shape(im_array)
             p = 0 #pixel count 
-            for i in range(rows):
+            for i in range(rows): 
                 for j in range(cols):
-                    if county_mask[i, j] == sel_county: #if it's inside a relevant county -- change this back to != 0 if do mult counties 
+                    if county_mask[i, j] != 0: #if it's in region of interest
                         if im_count == 1: #this is the first image
-                            #check that this is correct
-                            x = Pix(i, j, sel_county, tist_mask[i,j], im_array[i, j])
-                            precip_pix.append(x)
-                            # x = Pix(self, row, col, county, tist, first_ts_pt)
-                            # Create a Pix instance, initialize values 
+                            #initialize the row with row, col, county, tist, and first timestep 
+                            precip_df.at[p, 'row'] = i
+                            precip_df.at[p, 'col'] = j
+                            precip_df.at[p, 'county'] = county_mask[i, j]
+                            precip_df.at[p, 'tist'] = tist_mask[i, j]
+                            precip_df.at[p, date] = im_array[i, j]
                            
-
                         else: #not the first image processed
-                            # just append the new timeseries value to the appropriate pixel 
-                            precip_pix[p].add(im_array[i, j])
+                            # add the timestep to the column based on date and the pixel based on pixel index
+                            precip_df.at[p, date] = im_array[i, j]
                             
                         p += 1
                     # else pass
@@ -111,8 +104,8 @@ for y in range(start_yr, end_yr+1):
 #end y 
 
 #CHANGE FILE NAME
-with open ('precip_pix_Tharaka.pkl', 'wb') as file:
-    pickle.dump([precip_pix, precip_meta, precip_bound, date_list], file)
+with open ('precip_pixels.pkl', 'wb') as file:
+    pickle.dump([precip_df, precip_meta, precip_bound], file)
 print('done with precip')                   
 
 # now veg 
