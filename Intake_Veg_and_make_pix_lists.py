@@ -6,7 +6,7 @@
 ## and then put those pixels into separate lists 
 ## then save them for loading later 
 
-# import pandas as pd 
+import pandas as pd 
 # import folium 
 import matplotlib.pyplot as plt
 import rasterio as rs
@@ -37,7 +37,7 @@ class Pix:
 
 with open('county_mask.pkl', 'rb') as file:
     county_mask= pickle.load(file)
-    ## 0 = no county
+    ## 0 = no county -- outside of ROI
     ## 1 = Laikipia (14) 
     ## 2 = Meru (16)
     ## 3 = Tharaka (22) 
