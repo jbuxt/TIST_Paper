@@ -81,7 +81,7 @@ for y in range(start_yr, end_yr+1):
             
             rows, cols = np.shape(im_array)
             p = 0 #pixel count 
-            for i in range(rows): 
+            for i in range(65, rows): #know that first image is at row 67
                 for j in range(cols):
                     if county_mask[i, j] != 0: #if it's in region of interest
                         if im_count == 1: #this is the first image
@@ -103,55 +103,81 @@ for y in range(start_yr, end_yr+1):
     #end m 
 #end y 
 
-#CHANGE FILE NAME
-with open ('precip_pixels.pkl', 'wb') as file:
+#save by county for easier processing 
+    ## 1 = Laikipia (14) 
+    ## 2 = Meru (16)
+    ## 3 = Tharaka (22) 
+    ## 4 = Nyeri (25)
+    ## 5 = Kirinyaga (28) 
+    ## 6 = Embu (29)
+
+with open('precip_Laikipia.pkl', 'wb') as f:
+    pickle.dump([precip_df.loc[precip_df['county'] == 1], precip_meta, precip_bound], f)
+
+with open('precip_Meru.pkl', 'wb') as f:
+    pickle.dump([precip_df.loc[precip_df['county'] == 2], precip_meta, precip_bound], f)
+
+with open('precip_Tharaka.pkl', 'wb') as f:
+    pickle.dump([precip_df.loc[precip_df['county'] == 3], precip_meta, precip_bound], f)
+
+with open('precip_Nyeri.pkl', 'wb') as f:
+    pickle.dump([precip_df.loc[precip_df['county'] == 4], precip_meta, precip_bound], f)
+    
+with open('precip_Kirinyaga.pkl', 'wb') as f:
+    pickle.dump([precip_df.loc[precip_df['county'] == 5], precip_meta, precip_bound], f)
+
+with open('precip_Embu.pkl', 'wb') as f:
+    pickle.dump([precip_df.loc[precip_df['county'] == 6], precip_meta, precip_bound], f)
+
+with open('precip_pixels.pkl', 'wb') as file:
     pickle.dump([precip_df, precip_meta, precip_bound], file)
+    
 print('done with precip')                   
 
 # now veg 
 
 
-#Veg indices 
-dirname = './GEE_Veg_new'
-ndvi = np.array([])
-msavi2 = np.array([])
-for y in range(start_yr, end_yr+1):
-    for m in range(1, 13):
-        if ((y == 2013) and (m < 5)) or ((y == 2023) and (m > 4)):
-            pass
-        else:
-            fname = str(y)+str(m).zfill(2)+'01.tif'
-            #files are named by the month 
-            im = rs.open(os.path.join(dirname, fname))
-            veg_meta = im.meta
-            veg_bound = im.bounds
-            array1 = im.read(1) #band 1 is ndvi 
-            array2 = im.read(2) #band 2 msavi2
-            # a, b = np.shape(array1)
-            # array1 = np.reshape(array1, (1, a, b)) #make 3d since it's not when you select only 1 band
-            pix1 = [array1[3000, 3000], array1[2000, 2000], array1[6000, 5000], array1[3000,6000]] 
-            # array2 = np.reshape(array2, (1, a, b))
-            pix2 = [array2[3000, 3000], array2[2000, 2000], array2[6000, 5000], array2[3000,6000]] 
-            #damn i've forgotten how to do ANYTHING in python
-            if np.size(ndvi) == 0:
-                ndvi = pix1
-                msavi2 = pix2
-            else:
-                ndvi= np.row_stack((ndvi, pix1)) #stack the frames through time
-                msavi2 = np.row_stack((msavi2, pix2))
-            im.close()
-        # array size is frames, rows, columns  
+# #Veg indices 
+# dirname = './GEE_Veg_new'
+# ndvi = np.array([])
+# msavi2 = np.array([])
+# for y in range(start_yr, end_yr+1):
+#     for m in range(1, 13):
+#         if ((y == 2013) and (m < 5)) or ((y == 2023) and (m > 4)):
+#             pass
+#         else:
+#             fname = str(y)+str(m).zfill(2)+'01.tif'
+#             #files are named by the month 
+#             im = rs.open(os.path.join(dirname, fname))
+#             veg_meta = im.meta
+#             veg_bound = im.bounds
+#             array1 = im.read(1) #band 1 is ndvi 
+#             array2 = im.read(2) #band 2 msavi2
+#             # a, b = np.shape(array1)
+#             # array1 = np.reshape(array1, (1, a, b)) #make 3d since it's not when you select only 1 band
+#             pix1 = [array1[3000, 3000], array1[2000, 2000], array1[6000, 5000], array1[3000,6000]] 
+#             # array2 = np.reshape(array2, (1, a, b))
+#             pix2 = [array2[3000, 3000], array2[2000, 2000], array2[6000, 5000], array2[3000,6000]] 
+#             #damn i've forgotten how to do ANYTHING in python
+#             if np.size(ndvi) == 0:
+#                 ndvi = pix1
+#                 msavi2 = pix2
+#             else:
+#                 ndvi= np.row_stack((ndvi, pix1)) #stack the frames through time
+#                 msavi2 = np.row_stack((msavi2, pix2))
+#             im.close()
+#         # array size is frames, rows, columns  
 
-# #################################################
-# # Save to file for reloading in other scripts
-# #################################################
-del array1, array2
+# # #################################################
+# # # Save to file for reloading in other scripts
+# # #################################################
+# del array1, array2
 
-p0 = np.column_stack((precip[:, 0], ndvi[:, 0], msavi2[:, 0]))
-p1 = np.column_stack((precip[:, 1], ndvi[:, 1], msavi2[:, 1]))
-p2 = np.column_stack((precip[:, 2], ndvi[:, 2], msavi2[:, 2]))
-p3 = np.column_stack((precip[:, 3], ndvi[:, 3], msavi2[:, 3]))
+# p0 = np.column_stack((precip[:, 0], ndvi[:, 0], msavi2[:, 0]))
+# p1 = np.column_stack((precip[:, 1], ndvi[:, 1], msavi2[:, 1]))
+# p2 = np.column_stack((precip[:, 2], ndvi[:, 2], msavi2[:, 2]))
+# p3 = np.column_stack((precip[:, 3], ndvi[:, 3], msavi2[:, 3]))
 
-with open ('test_pix.pkl', 'wb') as file:
-    pickle.dump([p0, p1, p2, p3, start_yr, end_yr, date_list], file)
-print('done')
+# with open ('test_pix.pkl', 'wb') as file:
+#     pickle.dump([p0, p1, p2, p3, start_yr, end_yr, date_list], file)
+# print('done')
