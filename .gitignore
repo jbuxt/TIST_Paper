@@ -1,0 +1,12 @@
+/GEE_precip_trial
+/GEE_Veg_trial
+/Kenya_Counties
+/Sanity_check.qgz
+/TIST_Groves
+/GEE_Precip 
+/GEE_Veg_new
+relevant_counties/
+relevant_tist_groves/
+study_box_shape/
+*.pkl
+*.html
