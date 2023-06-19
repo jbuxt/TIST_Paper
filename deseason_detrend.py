@@ -11,21 +11,15 @@ import numpy.ma as ma
 import STL_Fitting as stl
 from sav_golay import savitzky_golay_filtering as sgf
 
-# with open ('clipped_precip_14-15.pkl', 'rb') as file:
-#     precip_meta, precip_bound, precip, date_list = pickle.load(file)
+with open ('precip_pixels_sample.pkl', 'rb') as file:
+    precip_df, precip_meta, precip_bound = pickle.load(file)
 
-# with open ('clipped_veg_14-15.pkl', 'rb') as file:
-#     veg_meta, veg_bound, ndvi, msavi2, start_yr, end_yr = pickle.load(file)
-with open ('test_pix.pkl', 'rb') as file:
-    p0, p1, p2, p3, start_yr, end_yr, date_list =pickle.load(file)
-    
-### Random pixels to use as tests 
-# 1 : 3000,3000
-# 2:  (3000, 6000) (might be vv, check?)
-#3: (6000, 5000)
-# 4: (2000, 2000)
-# COLUMNS 
-# precip, ndvi, msavi2
+precip_df.to_csv('precip_pixels_sample.csv', encoding='utf-8', index=False)
+
+with open ('ndvi_pixels_sample.pkl', 'rb') as file:
+    ndvi_df, ndvi_meta, ndvi_bound = pickle.load(file)
+
+ndvi_df.to_csv('ndvi_pixels_sample.csv', encoding='utf-8', index=False)
 
 ## consider: the wrapping? not sure why this is skipping some bits entirely 
 p0_smoothed = sgf(p0[:, 1], debug = False) 
@@ -86,6 +80,4 @@ plt.show()
 print('done')
 # is this going to work well to scale up? tbd lmao 
 
-###############################################
-# Detrending 
 

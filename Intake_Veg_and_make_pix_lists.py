@@ -28,10 +28,19 @@ with open('county_mask.pkl', 'rb') as file:
     ## 4 = Nyeri (25)
     ## 5 = Kirinyaga (28) 
     ## 6 = Embu (29)
+# Get lists of where each county is by index
+# Lai_idx = np.argwhere(county_mask == 1)
+Mer_idx = np.argwhere(county_mask == 2)
+# Tha_idx = np.argwhere(county_mask == 3)
+# Nye_idx = np.argwhere(county_mask == 4)
+# Kir_idx = np.argwhere(county_mask == 5)
+# Emb_idx = np.argwhere(county_mask == 6)
+
+del county_mask #save space
+
 with open('tist_mask.pkl', 'rb') as file:
     tist_mask = pickle.load(file)
-# plt.imshow(tist_mask)
-# plt.show()
+
 
 #################################################
 # Import tifs 
@@ -44,16 +53,17 @@ start_yr = 2013
 end_yr = 2023
 
 # #Number of pixels in each county: 
-# n_Laikipia = 10837687 
-# n_Meru = 7720270
-# n_Theraka = 2990072
-# n_Nyeri = 3733796
-# n_Kirinyaga = 1652252
-# n_Embu = 3170195
-rows = 6871
+n_Laikipia = 10837687 
+n_Meru = 7720270
+n_Theraka = 2990072
+n_Nyeri = 3733796
+n_Kirinyaga = 1652252
+n_Embu = 3170195
+
+rows = 6871 #in total picture
 cols = 8786
-chunk =  cols * 500
-n_ROI = 30104272
+
+# n_ROI = 30104272 #all counties 
 n_months = 120 
 
 #Precipitation #####################################################3 
@@ -61,7 +71,7 @@ dirname = './GEE_Precip'
 date_list = pd.date_range(start='5/1/2013', periods=120, freq='MS')
 col_names = ['row','col', 'tist', 'county']+([date.strftime('%Y-%m') for date in date_list])
 
-precip_df= pd.DataFrame(index=range(500),columns=col_names)
+precip_df= pd.DataFrame(index=range(n_Meru),columns=col_names)
 
 im_count = 0
 
@@ -84,29 +94,27 @@ for y in range(start_yr, end_yr+1):
             # does float 16 work for ndvi? mayhaps
             
             # rows, cols = np.shape(im_array)
-            p = 0 #pixel count 
-            for i in range(500): #0-500 done
-                for j in range(cols):
-                    if county_mask[i, j] != 0: #if it's in region of interest
-                        if im_count == 1: #this is the first image
-                            #initialize the row with row, col, county, tist, and first timestep 
-                            precip_df.at[p, 'row'] = i
-                            precip_df.at[p, 'col'] = j
-                            precip_df.at[p, 'county'] = county_mask[i, j]
-                            precip_df.at[p, 'tist'] = tist_mask[i, j]
-                            precip_df.at[p, date] = im_array[i, j]
-                           
-                        else: #not the first image processed
-                            # add the timestep to the column based on date and the pixel based on pixel index
-                            precip_df.at[p, date] = im_array[i, j]
-                            
-                        p += 1
-                    # else pass
-                # end j
-            # end i 
-    #end m 
-#end y 
-
+            # p = 0 #pixel count 
+            # for i in range(3000, 3050): #rows
+            #     for j in range(5000, 5050): #cols
+            for p in range(n_Meru):
+                i, j = Mer_idx[p] #go through the list indices of Meru points
+                # j = ind[1]
+                # if county_mask[i, j] != 0: #if it's in region of interest
+                if im_count == 1: #this is the first image
+                    #initialize the row with row, col, county, tist, and first timestep 
+                    precip_df.at[p, 'row'] = i
+                    precip_df.at[p, 'col'] = j
+                    precip_df.at[p, 'county'] = 2 #county_mask[i, j] #CHANGE THIS per county
+                    precip_df.at[p, 'tist'] = tist_mask[i, j]
+                    precip_df.at[p, date] = im_array[i, j]
+                    
+                else: #not the first image processed
+                    # add the timestep to the column based on date and the pixel based on pixel index
+                    precip_df.at[p, date] = im_array[i, j]
+                    
+                # p += 1
+                    
 #save by county for easier processing 
     ## 1 = Laikipia (14) 
     ## 2 = Meru (16)
@@ -133,55 +141,64 @@ for y in range(start_yr, end_yr+1):
 # with open('precip_Embu.pkl', 'wb') as f:
 #     pickle.dump([precip_df.loc[precip_df['county'] == 6], precip_meta, precip_bound], f)
 
-with open('precip_pixels_row500.pkl', 'wb') as file:
+with open('precip_pixels_Meru.pkl', 'wb') as file:
     pickle.dump([precip_df, precip_meta, precip_bound], file)
 
-print('done with precip first 500')                   
-
+print('done with precip Meru')                   
+'''
 # now veg 
 
 
 # #Veg indices 
-# dirname = './GEE_Veg_new'
-# ndvi = np.array([])
-# msavi2 = np.array([])
-# for y in range(start_yr, end_yr+1):
-#     for m in range(1, 13):
-#         if ((y == 2013) and (m < 5)) or ((y == 2023) and (m > 4)):
-#             pass
-#         else:
-#             fname = str(y)+str(m).zfill(2)+'01.tif'
-#             #files are named by the month 
-#             im = rs.open(os.path.join(dirname, fname))
-#             veg_meta = im.meta
-#             veg_bound = im.bounds
-#             array1 = im.read(1) #band 1 is ndvi 
-#             array2 = im.read(2) #band 2 msavi2
-#             # a, b = np.shape(array1)
-#             # array1 = np.reshape(array1, (1, a, b)) #make 3d since it's not when you select only 1 band
-#             pix1 = [array1[3000, 3000], array1[2000, 2000], array1[6000, 5000], array1[3000,6000]] 
-#             # array2 = np.reshape(array2, (1, a, b))
-#             pix2 = [array2[3000, 3000], array2[2000, 2000], array2[6000, 5000], array2[3000,6000]] 
-#             #damn i've forgotten how to do ANYTHING in python
-#             if np.size(ndvi) == 0:
-#                 ndvi = pix1
-#                 msavi2 = pix2
-#             else:
-#                 ndvi= np.row_stack((ndvi, pix1)) #stack the frames through time
-#                 msavi2 = np.row_stack((msavi2, pix2))
-#             im.close()
-#         # array size is frames, rows, columns  
+dirname = './GEE_Veg_new'
+ndvi_df= pd.DataFrame(index=range(chunk),columns=col_names)
 
-# # #################################################
-# # # Save to file for reloading in other scripts
-# # #################################################
-# del array1, array2
+im_count = 0
 
-# p0 = np.column_stack((precip[:, 0], ndvi[:, 0], msavi2[:, 0]))
-# p1 = np.column_stack((precip[:, 1], ndvi[:, 1], msavi2[:, 1]))
-# p2 = np.column_stack((precip[:, 2], ndvi[:, 2], msavi2[:, 2]))
-# p3 = np.column_stack((precip[:, 3], ndvi[:, 3], msavi2[:, 3]))
+for y in range(start_yr, end_yr+1):
+    for m in range(1, 13):
+        if ((y == 2013) and (m < 5)) or ((y == 2023) and (m > 4)):
+            pass #don't have those times 
+        else:
+            im_count += 1
+            print('im_count: ', im_count)
+            date = str(y)+'-'+str(m).zfill(2) #Use this to match the column names in the dataframe
+            fname = str(y)+str(m).zfill(2)+'01'+ '.tif'#files are named by the month 
+            im = rs.open(os.path.join(dirname, fname))
+            ndvi_meta = im.meta
+            ndvi_bound = im.bounds
+            im_array = im.read(1) #1 is ndvi, 2 is msavi2
+            # np.float16( --  probably fine, preserves 4 decimal places, but won't for now
+            #CHECK float 16
+            im.close()
 
-# with open ('test_pix.pkl', 'wb') as file:
-#     pickle.dump([p0, p1, p2, p3, start_yr, end_yr, date_list], file)
-# print('done')
+            
+            p = 0 #pixel count 
+            for i in range(3000, 3050): #rows
+                for j in range(5000, 5050): #cols
+                    if county_mask[i, j] != 0: #if it's in region of interest
+                        if im_count == 1: #this is the first image
+                            #initialize the row with row, col, county, tist, and first timestep 
+                            ndvi_df.at[p, 'row'] = i
+                            ndvi_df.at[p, 'col'] = j
+                            ndvi_df.at[p, 'county'] = county_mask[i, j]
+                            ndvi_df.at[p, 'tist'] = tist_mask[i, j]
+                            ndvi_df.at[p, date] = im_array[i, j]
+                           
+                        else: #not the first image processed
+                            # add the timestep to the column based on date and the pixel based on pixel index
+                            ndvi_df.at[p, date] = im_array[i, j]
+                            
+                        p += 1
+                    # else pass
+                # end j
+            # end i 
+    #end m 
+#end y 
+
+
+with open('ndvi_pixels_sample.pkl', 'wb') as file:
+    pickle.dump([ndvi_df, ndvi_meta, ndvi_bound], file)
+
+print('done with ndvi first sample')                   
+'''
