@@ -30,8 +30,8 @@ with open('county_mask.pkl', 'rb') as file:
     ## 6 = Embu (29)
 # Get lists of where each county is by index
 # Lai_idx = np.argwhere(county_mask == 1)
-Mer_idx = np.argwhere(county_mask == 2)
-# Tha_idx = np.argwhere(county_mask == 3)
+# Mer_idx = np.argwhere(county_mask == 2)
+Tha_idx = np.argwhere(county_mask == 3)
 # Nye_idx = np.argwhere(county_mask == 4)
 # Kir_idx = np.argwhere(county_mask == 5)
 # Emb_idx = np.argwhere(county_mask == 6)
@@ -71,7 +71,7 @@ dirname = './GEE_Precip'
 date_list = pd.date_range(start='5/1/2013', periods=120, freq='MS')
 col_names = ['row','col', 'tist', 'county']+([date.strftime('%Y-%m') for date in date_list])
 
-precip_df= pd.DataFrame(index=range(n_Meru),columns=col_names)
+precip_df= pd.DataFrame(index=range(n_Theraka),columns=col_names)
 
 im_count = 0
 
@@ -97,15 +97,15 @@ for y in range(start_yr, end_yr+1):
             # p = 0 #pixel count 
             # for i in range(3000, 3050): #rows
             #     for j in range(5000, 5050): #cols
-            for p in range(n_Meru):
-                i, j = Mer_idx[p] #go through the list indices of Meru points
+            for p in range(n_Theraka):
+                i, j = Tha_idx[p] #go through the list indices of Meru points
                 # j = ind[1]
                 # if county_mask[i, j] != 0: #if it's in region of interest
                 if im_count == 1: #this is the first image
                     #initialize the row with row, col, county, tist, and first timestep 
                     precip_df.at[p, 'row'] = i
                     precip_df.at[p, 'col'] = j
-                    precip_df.at[p, 'county'] = 2 #county_mask[i, j] #CHANGE THIS per county
+                    precip_df.at[p, 'county'] = 3 #county_mask[i, j] #CHANGE THIS per county
                     precip_df.at[p, 'tist'] = tist_mask[i, j]
                     precip_df.at[p, date] = im_array[i, j]
                     
@@ -141,10 +141,10 @@ for y in range(start_yr, end_yr+1):
 # with open('precip_Embu.pkl', 'wb') as f:
 #     pickle.dump([precip_df.loc[precip_df['county'] == 6], precip_meta, precip_bound], f)
 
-with open('precip_pixels_Meru.pkl', 'wb') as file:
+with open('precip_pixels_Theraka.pkl', 'wb') as file:
     pickle.dump([precip_df, precip_meta, precip_bound], file)
 
-print('done with precip Meru')                   
+print('done with precip theraka')                   
 '''
 # now veg 
 

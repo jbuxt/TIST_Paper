@@ -8,10 +8,10 @@ import pandas as pd
 import numpy as np
 from scipy.signal import savgol_filter
 
-def savitzky_golay_filtering(timeseries, wnds=[7, 4], orders=[2, 3], debug=True):                                     
-    interp_ts = pd.Series(timeseries)
+def savitzky_golay_filtering(timeseries, wnds=[7, 4], orders=[2, 3], debug=False):                                     
+    # interp_ts = pd.Series(timeseries)
     ## Step 1: interopolate linearly between any missing points
-    interp_ts = interp_ts.interpolate(method='linear', limit=14)
+    interp_ts = timeseries.interpolate(method='linear', limit=14)
     ## missing: doesn't go through and replace any dramatic jumps of 0.4 or more
     # smooth_ts = interp_ts  
     ## wnds = m, orders = d from paper 
@@ -64,7 +64,7 @@ def savitzky_golay_filtering(timeseries, wnds=[7, 4], orders=[2, 3], debug=True)
         iter +=1
         sign = diff > 0 ## have to update the sign st that new trend is filled right 
                                                                                           
-        print(iter, ' : ', new_F)
+        # print(iter, ' : ', new_F)
         #then repeat again unless the new F score is bigger than the last one
         # indicating a worse fit, in which case values are not replaced and exits
 

@@ -11,3 +11,7 @@ study_box_shape/
 *.pkl
 *.html
 *.csv
+*.twb
+*.qgz
+*.png
+*.pyc

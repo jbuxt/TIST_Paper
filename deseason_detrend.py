@@ -14,68 +14,67 @@ from sav_golay import savitzky_golay_filtering as sgf
 with open ('precip_pixels_sample.pkl', 'rb') as file:
     precip_df, precip_meta, precip_bound = pickle.load(file)
 
-precip_df.to_csv('precip_pixels_sample.csv', encoding='utf-8', index=False)
+# precip_df.to_csv('precip_pixels_sample.csv', encoding='utf-8', index=False)
 
 with open ('ndvi_pixels_sample.pkl', 'rb') as file:
     ndvi_df, ndvi_meta, ndvi_bound = pickle.load(file)
 
-ndvi_df.to_csv('ndvi_pixels_sample.csv', encoding='utf-8', index=False)
+# ndvi_df.to_csv('ndvi_pixels_sample.csv', encoding='utf-8', index=False)
 
-## consider: the wrapping? not sure why this is skipping some bits entirely 
-p0_smoothed = sgf(p0[:, 1], debug = False) 
-p1_smoothed = sgf(p1[:, 1], debug = False) 
-p2_smoothed = sgf(p2[:, 1], debug = False) 
-p3_smoothed = sgf(p3[:, 1], debug = False) 
+## Summary stats on the ndvi 
+print('total % pix missing: ', ndvi_df.isna().sum().sum() / (120*ndvi_df.shape[0])) #for all pix
 
-plt.subplot(4, 1, 1)
-plt.plot(date_list, p2[:, 1], 'bo', date_list, pd.Series(p2[:, 1]).interpolate(method="linear"), 
-         'r-', date_list, p2_smoothed, 'g*')
-plt.title('p2')
-plt.subplot(4, 1, 2)
-plt.plot(date_list, p0[:, 1], 'bo',date_list, pd.Series(p0[:, 1]).interpolate(method="linear"), 'r-',
-         date_list, p0_smoothed, 'g*')
-plt.title('p0')
-plt.subplot(4, 1, 3)
-plt.plot(date_list, p1[:, 1], 'bo', date_list,pd.Series(p1[:, 1]).interpolate(method="linear"), 'r-',
-         date_list, p1_smoothed, 'g*')
-plt.title('p1')
-plt.subplot(4, 1, 4)
-plt.plot(date_list, p3[:, 1], 'bo', date_list,pd.Series(p3[:, 1]).interpolate(method="linear"), 'r-',
-         date_list, p3_smoothed, 'g*')
-plt.title('p3')
-plt.suptitle('ndvi with linear and sgf smoothing')
+#how many pixels are missing by month generally
+for m in range(1,13):
+    mo = '-'+str(m).zfill(2)
+    missing = ndvi_df.filter(like=mo, axis=1).isna().sum().sum() #number of missing for that month over the 10 years
+    # print(mo, ' missing % : ', missing/(2500*10))
+
+#apply smoothing function to each timeseries (rows, axis =1)
+#this takes a minute
+#would be nice to vectorize this but not sure that's possible
+smoothed_ndvi_df = ndvi_df.filter(like='20', axis =1).astype("float32").apply(sgf, axis = 1, result_type='broadcast') #
+
+# for idx, row in ndvi_df.iterrows():
+#     # use df.apply, with result_type='broadcast'
+#     ts = ndvi_df.at[idx].filter(like='20', axis =1)
+#     ts_smoothed = sgf(ts, debug = False)
+    ## consider: the wrapping? not sure why this is skipping some bits entirely 
+
+for i in range(1,5):
+    plt.subplot(4, 1, i)
+    plt.plot(smoothed_ndvi_df.columns, smoothed_ndvi_df.iloc[i], 'bo', smoothed_ndvi_df.columns, 
+           ndvi_df.filter(like='20', axis =1).iloc[i], 'g*')
+    plt.title('pixel '+str(i))
+plt.suptitle('ndvi with sgf smoothing')
 plt.show()
-
-
 
 #############################################
-## Deseason
+## Deseason and detrend with STL
+
+# period = 12 #since monthly data with yearly seasons
+# smooth_length = 7 #ns from STL - might have to fiddle with this 
+# p1_res = stl.robust_stl(p1_smoothed, period, smooth_length)
+
+#just for debugging - get a few example plots 
+for i in range(1,5):
+    plt.figure(i)
+    decomp = stl.robust_stl(smoothed_ndvi_df.iloc[i], period = 12, smooth_length = 7)
+    decomp.plot()
+    plt.title('STL')
+    plt.show()
 
 
-'''#reshape so that each row is a year and each column is a month
-reshaped = p1[:, 1].reshape(10,12) #ndvi 
+#returns object - just get .resid out of it 
+def get_resid(s):
+    decomp = stl.robust_stl(s, period = 12, smooth_length = 7)
+    return decomp.resid
 
-ndvi_season = np.nanmean(reshaped, axis = 0)
-# Take the average of each month across the ten years, ignoring nans
-# Have a 1x12 array now of the seasonal means (1 row)
+ndvi_res = smoothed_ndvi_df.apply(get_resid, axis=1, result_type='broadcast')
 
-#subtract each column - have to transpose one because of np.subtract
-#10x12 - 
-# 1 x 12 season 
-deseasoned = (reshaped - ndvi_season).flatten(order = 'C')
-#get back to one column 
-plt.figure()
-plt.plot(deseasoned)
-plt.title('deseasoned with mean')
-plt.show()'''
+#copy over the rows and columns etc
+ndvi_res[['row','col','tist', 'county']]=ndvi_df[['row','col','tist', 'county']]
 
-period = 12 #since monthly data with yearly seasons
-smooth_length = 7 #ns from STL - might have to fiddle with this 
-p1_res = stl.robust_stl(p1_smoothed, period, smooth_length)
-
-p1_res.plot()
-plt.title('STL')
-plt.show()
 
 print('done')
 # is this going to work well to scale up? tbd lmao 
