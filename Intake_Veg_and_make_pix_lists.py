@@ -141,8 +141,10 @@ for y in range(start_yr, end_yr+1):
 # with open('precip_Embu.pkl', 'wb') as f:
 #     pickle.dump([precip_df.loc[precip_df['county'] == 6], precip_meta, precip_bound], f)
 
-with open('precip_pixels_Theraka.pkl', 'wb') as file:
-    pickle.dump([precip_df, precip_meta, precip_bound], file)
+precip_df.to_csv('precip_pixels_Theraka.csv', encoding='utf-8', index=False)
+
+# with open('precip_pixels_Theraka.pkl', 'wb') as file:
+#     pickle.dump([precip_df, precip_meta, precip_bound], file)
 
 print('done with precip theraka')                   
 '''
