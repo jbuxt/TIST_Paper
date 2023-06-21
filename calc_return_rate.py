@@ -6,6 +6,8 @@ import pandas as pd
 # from rasterio import features
 import numpy as np 
 import matplotlib.pyplot as plt 
+import matplotlib.cm as cm
+from matplotlib.colors import ListedColormap
 import pickle
 import numpy.ma as ma 
 from scipy.optimize import curve_fit
@@ -29,11 +31,12 @@ NDMA = pd.concat([NDMA, extra]).sort_index()
 date_list = NDMA.index
 date_plus = pd.date_range(start='5/1/2013', periods=121, freq='MS') #need one that's +1 in length for the color graph 
 
-colors = {'Recovery':2, 'Alert':1, 'Alarm':0,'Normal':3}
-
+color_dict = {'Recovery':2, 'Alert':1, 'Alarm':0,'Normal':3}
+CMAP = ListedColormap(['red', 'orange', 'yellow', 'green'])
 pix =  ndvi_res.iloc[20].filter(like='20') #get one sample from a pixel
+pix.index = pd.to_datetime(pix.index, format='%Y-%m')
 precip = precip_df.iloc[20].filter(like='20')
-
+precip.index = pd.to_datetime(precip.index, format='%Y-%m')
 ########### Calc recovery rate sample ##############3
 #pix is a pd series
 sample = pix['2019-01':'2020-06-01'].astype("float32") #get relevant bit and flip over x axis
@@ -51,10 +54,11 @@ popt, pcov = curve_fit(lambda t, a, b, c: a*np.exp(b*t)+c, x, sample,
 a = popt[0]
 r = popt[1] #recovery rate
 c = popt[2]
-#for plotting
+#for plotting and finding residual (do i need to find residual?? )
 y_curvefitted = a*np.exp(r*x)+c 
+curve_series = pd.Series(y_curvefitted, index=sample.index)
 
-
+print('recovery rate: ', r)
 
 
 ##########Plot ############################
@@ -63,28 +67,36 @@ fig, (ax1, ax2) = plt.subplots(2, 1, sharex=True, sharey=False)
 ax1.set_xlabel('month')
 ax1.set_ylabel('monthly precip mm/mo' )
 # ax1.set_ylim(0, 600)
-ax1.bar(x=date_list, height=precip, width=20, label='monthly precip mm')
+ax1.bar(x=precip.index, height=precip, width=20, label='monthly precip mm')
 
 
 ax2.set_ylabel('NDVI residual')
 # ax2.set_ylim(-0.25, 0.25)
-ax2.plot(date_list, pix, 'r*', label='ndvi res')
-fig.legend()
+ax2.plot(pix, 'r*', label='ndvi res')
+rec = 'fitted recovery, r='+str(round(r, 3))
+ax2.plot(curve_series, 'g-', label=rec)
+# fig.legend()
 ax1.grid(axis='x', which='major')
 ax2.grid(axis='x', which='major')
-
+ax2.legend()
 ax1.pcolor(date_plus, ax1.get_ylim(), 
-           NDMA['Tharaka'].map(colors).values[np.newaxis], 
-           cmap='RdYlGn', alpha=0.4,
+           NDMA['Tharaka'].map(color_dict).values[np.newaxis], 
+           cmap=CMAP, alpha=0.4,
            linewidth=0, antialiased = True)
 #lol don't know how to do this to both at once
 ax2.pcolor(date_plus, ax2.get_ylim(), 
-           NDMA['Tharaka'].map(colors).values[np.newaxis], 
-           cmap='RdYlGn', alpha=0.4,
+           NDMA['Tharaka'].map(color_dict).values[np.newaxis], 
+           cmap=CMAP, alpha=0.4,
            linewidth=0, antialiased = True)
 
 fig.autofmt_xdate(rotation=45)
-
+#fix this -- set the
+cbar=fig.colorbar(cm.ScalarMappable(cmap=CMAP), ax=ax1, 
+                  location='top', shrink = 0.5,
+                  pad=0.2,
+                  label='NDMA Drought Status')
+cbar.set_ticks([0.12, 0.35, 0.62, 0.87])
+cbar.set_ticklabels(['Alarm', 'Alert', 'Recovery', 'Normal'])
 plt.show()
 
 print('done')
