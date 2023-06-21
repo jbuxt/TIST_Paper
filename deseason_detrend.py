@@ -35,13 +35,13 @@ smoothed_ndvi_df = ndvi_df.filter(like='20', axis =1).astype("float32").apply(sg
 
 ## consider: the wrapping? not sure why this is skipping some bits entirely 
 
-# for i in range(1,5):
-#     plt.subplot(4, 1, i)
-#     plt.plot(smoothed_ndvi_df.columns, smoothed_ndvi_df.iloc[i], 'bo', smoothed_ndvi_df.columns, 
-#            ndvi_df.filter(like='20', axis =1).iloc[i], 'g*')
-#     plt.title('pixel '+str(i))
-# plt.suptitle('ndvi with sgf smoothing')
-# plt.show()
+for i in range(1,5):
+    plt.subplot(4, 1, i)
+    plt.plot(smoothed_ndvi_df.columns, smoothed_ndvi_df.iloc[i], 'bo', smoothed_ndvi_df.columns, 
+           ndvi_df.filter(like='20', axis =1).iloc[i], 'g*')
+    plt.title('pixel '+str(i))
+plt.suptitle('ndvi with sgf smoothing')
+plt.show()
 
 #############################################
 ## Deseason and detrend with STL
