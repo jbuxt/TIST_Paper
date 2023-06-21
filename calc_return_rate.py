@@ -8,6 +8,7 @@ import numpy as np
 import matplotlib.pyplot as plt 
 import pickle
 import numpy.ma as ma 
+from scipy.optimize import curve_fit
 
 
 with open ('precip_pixels_sample.pkl', 'rb') as file:
@@ -32,6 +33,31 @@ colors = {'Recovery':2, 'Alert':1, 'Alarm':0,'Normal':3}
 
 pix =  ndvi_res.iloc[20].filter(like='20') #get one sample from a pixel
 precip = precip_df.iloc[20].filter(like='20')
+
+########### Calc recovery rate sample ##############3
+#pix is a pd series
+sample = pix['2019-01':'2020-06-01'].astype("float32") #get relevant bit and flip over x axis
+
+sample = sample[sample.values.argmin():-1] #get everything from minimum to the end  
+x = range(sample.size) #make fake time data
+
+#potentially need to edit this 
+a_guess, b_guess, c_guess = 1, -0.01, 1
+
+popt, pcov = curve_fit(lambda t, a, b, c: a*np.exp(b*t)+c, x, sample, 
+                       p0=(a_guess, b_guess, c_guess))
+
+# note that have to remove any values of sample that are zero along with corresponding x -- see if that's an issue 
+a = popt[0]
+r = popt[1] #recovery rate
+c = popt[2]
+#for plotting
+y_curvefitted = a*np.exp(r*x)+c 
+
+
+
+
+##########Plot ############################
 fig, (ax1, ax2) = plt.subplots(2, 1, sharex=True, sharey=False)
 # ax2 = host.twinx()
 ax1.set_xlabel('month')
