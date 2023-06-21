@@ -1,4 +1,6 @@
-#take a few lists of pixels and deseason and detrend 
+#Calculate the recovery rate for pixels 
+# and ?? 
+#
 
 # import geopandas as gp 
 import pandas as pd
@@ -9,7 +11,7 @@ import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 from matplotlib.colors import ListedColormap
 import pickle
-import numpy.ma as ma 
+# import numpy.ma as ma 
 from scipy.optimize import curve_fit
 
 

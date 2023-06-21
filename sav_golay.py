@@ -9,11 +9,11 @@ import numpy as np
 from scipy.signal import savgol_filter
 
 def savitzky_golay_filtering(timeseries, wnds=[7, 4], orders=[2, 3], debug=False):                                     
-    # interp_ts = pd.Series(timeseries)
+
     ## Step 1: interopolate linearly between any missing points
     interp_ts = timeseries.interpolate(method='linear', limit=14)
     ## missing: doesn't go through and replace any dramatic jumps of 0.4 or more
-    # smooth_ts = interp_ts  
+    
     ## wnds = m, orders = d from paper 
     ## Step 1.5?: selects the combo of m and d that has best fit
     # according to the least squares (NOT IMPLEMENTED)                                                                                          
