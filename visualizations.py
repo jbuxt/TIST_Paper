@@ -55,3 +55,12 @@ plt.title('Longest Missing Streak Tharaka')
 plt.colorbar()
 plt.savefig('./visuals/missing_streak_map_tharaka.png')
 print('done')
+
+## Summary stats on the ndvi 
+# print('total % pix missing: ', ndvi_df.isna().sum().sum() / (120*ndvi_df.shape[0])) #for all pix
+
+#how many pixels are missing by month generally
+# for m in range(1,13):
+#     mo = '-'+str(m).zfill(2)
+#     missing = ndvi_df.filter(like=mo, axis=1).isna().sum().sum() #number of missing for that month over the 10 years
+#     print(mo, ' missing % : ', missing/(2500*10))
