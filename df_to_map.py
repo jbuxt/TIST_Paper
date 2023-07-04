@@ -4,12 +4,12 @@
 # put names of columns you want mapped in a list 
 #future -  convert to raster file for plotting in GIS 
 
-# import numpy as np 
-# from scipy.sparse import coo_matrix 
-# import pandas as pd
+import numpy as np 
+from scipy.sparse import coo_matrix 
+import pandas as pd
 # import matplotlib.pyplot as plt 
 
-def df_to_array_map(df, col_names):
+def df_to_map(df, col_names):
     rows = 6871
     cols = 8786
     #know this based on my orginal region of interest
