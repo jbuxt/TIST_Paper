@@ -25,7 +25,7 @@ with open ('ndvi_sample_res.pkl', 'rb') as file:
 NDMA = pd.read_csv('NDMA_droughts.csv', index_col=0, parse_dates=['Date']) 
 # NDMA.index = pd.to_datetime(NDMA.index, format='%Y-%m-%d') #index is datetime
 
-#extend to include the data we don't know anything about
+#extend to include the dates there are no NMDA classifications for
 extra = pd.DataFrame(columns = NDMA.columns, index = pd.date_range(start='2013-05-01', periods=40, freq='MS'))
 extra.fillna
 NDMA = pd.concat([NDMA, extra]).sort_index()
@@ -35,16 +35,23 @@ date_plus = pd.date_range(start='5/1/2013', periods=121, freq='MS') #need one th
 
 color_dict = {'Recovery':2, 'Alert':1, 'Alarm':0,'Normal':3}
 CMAP = ListedColormap(['red', 'orange', 'yellow', 'green'])
-pix =  ndvi_res.iloc[20].filter(like='20') #get one sample from a pixel
+
+#one sample pixel 
+pix =  ndvi_res.iloc[20].filter(like='20') 
 pix.index = pd.to_datetime(pix.index, format='%Y-%m')
 precip = precip_df.iloc[20].filter(like='20')
 precip.index = pd.to_datetime(precip.index, format='%Y-%m')
+
 ########### Calc recovery rate sample ##############3
 #pix is a pd series
-sample = pix['2019-01':'2020-06-01'].astype("float32") #get relevant bit and flip over x axis
+sample = pix['2019-01':'2020-06-01'].astype("float32") #get relevant part 
+#-- now need to tell it where to look 
+#need to probably include clause that if the min isn't more than X% diff, then 
+#there was nothing to recover from 
 
 sample = sample[sample.values.argmin():-1] #get everything from minimum to the end  
-x = range(sample.size) #make fake time data
+#change-- specify how long i'm looking for recovery? 
+x = range(sample.size) #make fake time data for this sample 
 
 #potentially need to edit this 
 a_guess, b_guess, c_guess = 1, -0.01, 1
@@ -60,7 +67,12 @@ c = popt[2]
 y_curvefitted = a*np.exp(r*x)+c 
 curve_series = pd.Series(y_curvefitted, index=sample.index)
 
-print('recovery rate: ', r)
+#Calculate the residual between the fitted curve and data 
+ss_res = np.nansum((sample - y_curvefitted)**2)
+ss_tot = np.nansum((sample - sample.mean())**2)
+R_sq = 1 - (ss_res/ss_tot)
+
+print('recovery rate: ', r, '\nRsq: ', R_sq)
 
 
 ##########Plot ############################
@@ -75,7 +87,7 @@ ax1.bar(x=precip.index, height=precip, width=20, label='monthly precip mm')
 ax2.set_ylabel('NDVI residual')
 # ax2.set_ylim(-0.25, 0.25)
 ax2.plot(pix, 'r*', label='ndvi res')
-rec = 'fitted recovery, r='+str(round(r, 3))
+rec = 'fitted recovery, r='+str(round(r, 3))+' Rsq='+str(round(R_sq, 2))
 ax2.plot(curve_series, 'g-', label=rec)
 # fig.legend()
 ax1.grid(axis='x', which='major')
