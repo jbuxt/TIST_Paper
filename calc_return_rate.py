@@ -42,6 +42,22 @@ pix.index = pd.to_datetime(pix.index, format='%Y-%m')
 precip = precip_df.iloc[20].filter(like='20')
 precip.index = pd.to_datetime(precip.index, format='%Y-%m')
 
+'''
+have a df with dates vals and empty column 
+have list of idx of filled parts if flattened 
+
+method 1: look for single drop and recovery as in smith 
+-- advantage: can just iterate through each thing in a flattened list? 
+
+method 2: look for drop and recovery in date ranges pertaining to specific droughts 
+
+-- what i don't have: a way to connect the list of idx to dates and pixels without flattening and unflattening
+could i do math on the list of idx to get it all working for a 2d array which is then easier to connect to dates 
+sth like modulo and subtract to get it all back in the 0-120 range 
+
+121
+'''
+
 ########### Calc recovery rate sample ##############3
 #pix is a pd series
 sample = pix['2019-01':'2020-06-01'].astype("float32") #get relevant part 
