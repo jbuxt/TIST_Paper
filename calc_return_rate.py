@@ -15,11 +15,18 @@ import pickle
 from scipy.optimize import curve_fit
 
 
-with open ('precip_pixels_sample.pkl', 'rb') as file:
-    precip_df, precip_meta, precip_bound = pickle.load(file)
+# with open ('precip_pixels_sample.pkl', 'rb') as file:
+#     precip_df, precip_meta, precip_bound = pickle.load(file)
 
-with open ('ndvi_sample_res.pkl', 'rb') as file:
-    ndvi_res, ndvi_meta, ndvi_bound = pickle.load(file)
+# with open ('ndvi_sample_res.pkl', 'rb') as file:
+#     ndvi_res, ndvi_meta, ndvi_bound = pickle.load(file)
+
+with open('Tharaka_ss.pkl', 'rb') as file:
+    # A new file will be created
+   ss, ss_rows, ss_cols= pickle.load(file)
+   
+ndvi_res  = pd.read_csv('NDVI_residuals_Tharaka.csv') 
+
 
 #import the drought classifications 
 NDMA = pd.read_csv('NDMA_droughts.csv', index_col=0, parse_dates=['Date']) 
@@ -56,6 +63,40 @@ could i do math on the list of idx to get it all working for a 2d array which is
 sth like modulo and subtract to get it all back in the 0-120 range 
 
 121
+'''
+
+'''
+now i have a list of the correct rows to access that corresponds with the start/stop within those rows 
+if i want to look at specific dates, could convert those to indx numbers 
+
+then, i could say "get any runs that have at least 12 mo data within cols X to Y which is 2016-20, and look 
+for a local minimum (impose a condition to say "no recovery event?") that is not within X months of the end of the period . If there is a recovery, find rate, if not, set to -1 for no significant 
+recovery event. Save the date of the local minimum as well" 
+
+Then for each pixel, I could have 2 things for each drought period I look at: 
+-- recovery rate (-1 for no recovery)
+-- date of minimum 
+
+Make a new DF with the location, TIST, county, and recovery rate and date for the two drought periods 
+
+issue: if there's 2 periods within row, and both contain data within the drought period I look at? 
+eg one has data 2013-2018, and other 2019-2023, and I look at 2016-2020. Not an issue 
+
+
+Alternative: look at each pixel and find 1-3 local minima below certain threshold
+Find recovery rates for each 
+Find dates for each 
+Categorize them per drought event by date -- only take biggest one for each time period? or most recent?
+using the magnitude of the reduction might not be best way? literature tends to use avg of
+the recovery rates if they find multiple recoveries in one pixel 
+
+-- approach -  find the recovery rates and dates and see if the dates i'm finding as the recovery are
+all around a certain time or if they're really spread out? 
+
+am i being mathematically lazy/innaccurate if i just find recoveries by local minimum within time period on residual? 
+think no because a) have specific time for this specific area and b) using residual ? 
+
+
 '''
 
 ########### Calc recovery rate sample ##############3

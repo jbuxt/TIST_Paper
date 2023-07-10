@@ -10,10 +10,11 @@ import pandas as pd
 import numpy as np 
 import matplotlib.pyplot as plt 
 import STL_Fitting as stl
+import pickle
 
 
 # Load the veg data #############################################
-ndvi_df = pd.read_csv('ndvi_pixels_Theraka.csv', nrows=100) #TEMP for testing 
+ndvi_df = pd.read_csv('ndvi_pixels_Theraka.csv', nrows=1000) #TEMP for testing 
 
 nrows, dum = ndvi_df.shape
 # dates = pd.date_range(start='5/1/2013', periods=120, freq='MS')
@@ -44,7 +45,6 @@ for start, stop in ss:
 #apply mask - now all 'rows' have either 1 or 2 longer runs 
 flat_ndvi = flat_ndvi * mask
 
-
 # STL decomp ###########################################
 ndvi_res_flat = np.empty((nrows, 121)).flatten()
 ndvi_res_flat[:] = np.nan
@@ -54,7 +54,6 @@ for start, stop in ss:
     #apply the decomp and get residual
     decomp = stl.robust_stl(sample, period = 12, smooth_length = 21)
     ndvi_res_flat[start:stop] = decomp.resid
-
 
     # decomp.plot()
     # plt.xticks(rotation=90)
@@ -66,37 +65,13 @@ smoothed_ndvi_df.loc[:,:] = ndvi_res_flat.reshape(nrows, 121)
 smoothed_ndvi_df = pd.concat([ndvi_df[['row','col','tist', 'county']], smoothed_ndvi_df], axis = 1)
 # smoothed_ndvi_df[['row','col','tist', 'county']]=ndvi_df[['row','col','tist', 'county']]
 #get the rows and cols of array that the ss is referring to once ndvi is reshaped 
-ss_cols = ss % 121
-ss_rows = np.floor(ss[:,0] / 121)
+ss_cols = ss % 121 #this now more closely aligns with the date 
+ss_rows = np.floor(ss[:,0] / 121) #gives the row of the dataframe that it corresponds to 
+
 # smoothed_ndvi_df.loc[ss_rows, 'ss'] = ss_cols #can't do this because some will have 2 start stops 
 #maybe just leave it as separate array 
 # if i delete the rows with not enough data, will have to do df via idx name and not location 
 
-'''
-now i have a list of the correct rows to access that corresponds with the start/stop within those rows 
-if i want to look at specific dates, could convert those to indx numbers 
-
-then, i could say "get any runs that have data within cols X to Y which is 2016-20, and look 
-for a recovery. If there is a recovery, find rate, if not, set to -1 for no significant 
-recovery event. Save the date of the local minimum as well" 
-
-Then for each pixel, I could have 2 things for each drought period I look at: 
--- recovery rate (-1 for no recovery)
--- date of minimum 
-
-issue: if there's 2 periods within row, and both contain data within the drought period I look at? 
-eg one has data 2013-2018, and other 2019-2023, and I look at 2016-2020
-
-
-Alternative: look at each period and find 1-3 local minima below certain threshold
-Find recovery rates for each 
-Find dates for each 
-Categorize them per drought event by date 
--- have to assign threshold so that don't get like 6 total recoveries over the 10 years if there's two 5 year ish periods 
-
-is there anything literature wise about doing something fancier than just finding the local min? 
-
-'''
 #delete the rows that don't have enough continuous data 
 # smoothed_ndvi_df = smoothed_ndvi_df.drop() #rows where ss is empty 
 # smoothed_ndvi_df = smoothed_ndvi_df.drop(columns='empty')
@@ -105,8 +80,11 @@ is there anything literature wise about doing something fancier than just findin
 # del smoothed_ndvi_df #save space
 
 #Save to CSV 
-smoothed_ndvi_df.to_csv('ndvi_residuals_Theraka.csv', encoding='utf-8', index=False)
+smoothed_ndvi_df.to_csv('ndvi_residuals_Tharaka.csv', encoding='utf-8', index=False)
 #Save the ss !!
-#np save ss to csv ?? 
+
+with open('Tharaka_ss.pkl', 'wb') as file:
+    # A new file will be created
+    pickle.dump([ss, ss_rows, ss_cols], file)
 
 print('done')
