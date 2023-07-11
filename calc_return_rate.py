@@ -1,5 +1,10 @@
-#Calculate the recovery rate for pixels 
-# and ?? 
+# Calculate the recovery rate for pixels at specified times according to the NDMA classifications 
+# Inputs: df of ndvi residuals 
+#       start/stop indexes for the continuous sections of cleaned data
+#       NDMA csv if graphing wanted 
+# Outputs: df of ndvi results saved to csv
+#           results are: recovery rate and Rsq and fitted values 
+#                       for each recovery time period for all available data 
 #
 
 # import geopandas as gp 
@@ -123,6 +128,7 @@ for z in range(n_recovs):
             rsquared = 0
             y_curvefitted = 0
 
+
         # print('recovery rate: ', r, '\nRsq: ', rsquared)
 
         recov_rates[n] = r
@@ -181,4 +187,4 @@ ndvi_results.dropna(axis=0, thresh=8, inplace=True, ignore_index=False) #drop an
 # keep the index labels 
 #Save to a csv 
 ndvi_results.to_csv('ndvi_results_Tharaka.csv', encoding='utf-8')
-print('done')
+print('donezo')
