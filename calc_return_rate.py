@@ -22,11 +22,11 @@ from scipy.optimize import curve_fit
 #     ndvi_res, ndvi_meta, ndvi_bound = pickle.load(file)
 
 with open('Tharaka_ss.pkl', 'rb') as file:
-    # A new file will be created
    ss, ss_rows, ss_cols= pickle.load(file)
+ss_rows = ss_rows.astype('int')
    
-ndvi_res  = pd.read_csv('NDVI_residuals_Tharaka.csv') 
-
+ndvi_res  = pd.read_csv('NDVI_residuals_Tharaka.csv') #only has 1000 rows atm 
+precip_df = pd.read_csv('precip_pixels_Tharaka.csv', nrows = 1000) 
 
 #import the drought classifications 
 NDMA = pd.read_csv('NDMA_droughts.csv', index_col=0, parse_dates=['Date']) 
@@ -44,69 +44,42 @@ color_dict = {'Recovery':2, 'Alert':1, 'Alarm':0,'Normal':3}
 CMAP = ListedColormap(['red', 'orange', 'yellow', 'green'])
 
 #one sample pixel 
-pix =  ndvi_res.iloc[20].filter(like='20') 
+pix =  ndvi_res.iloc[967,65:124]#.filter(like='20') 
 pix.index = pd.to_datetime(pix.index, format='%Y-%m')
-precip = precip_df.iloc[20].filter(like='20')
+precip = precip_df.iloc[967].filter(like='20')
 precip.index = pd.to_datetime(precip.index, format='%Y-%m')
 
-'''
-have a df with dates vals and empty column 
-have list of idx of filled parts if flattened 
+#### Calculate the recovery rates based on NDMA drought classification dates #####################
+# The dates of recovery/normal after drought periods 
+recovery_idx_Th = np.array( [59, 77, 116] )#Apr 18, Oct 19, Jan 23 (ignored  104, 107, because those are kinda blips in the middle of drought)
+# add for other counties 
 
-method 1: look for single drop and recovery as in smith 
--- advantage: can just iterate through each thing in a flattened list? 
+recov_start = recovery_idx_Th-7 #look 7 months back for the start of the recovery period
+recov_stop = recovery_idx_Th+4 #look up to 4 months to account for delay in veg greening 
+recov_stop[recov_stop > 119] = 119 #in case there's any that are close to the end 
 
-method 2: look for drop and recovery in date ranges pertaining to specific droughts 
+#Make an array with columns that show which ss pairs/rows are valid for each of the recovery periods 
+ss_overlap = np.empty((len(ss_rows), len(recov_start)))
+for x in range(len(recov_start)):
+   ss_overlap[:, x] = (ss_cols[:, 0]<= recov_start[x]) & (ss_cols[:,1] >= recov_stop[x]) #Boolean 
 
--- what i don't have: a way to connect the list of idx to dates and pixels without flattening and unflattening
-could i do math on the list of idx to get it all working for a 2d array which is then easier to connect to dates 
-sth like modulo and subtract to get it all back in the 0-120 range 
+ss_overlap = ss_overlap.astype('bool')
+####### Calculate the recovery rates for each designated recovery period #####
+#Make this a loop that goes through the recov_start/stop list 
 
-121
-'''
+valid_rows = ss_rows[ss_overlap[:,0]]#these are the rows to look at for the first recovery period 
 
-'''
-now i have a list of the correct rows to access that corresponds with the start/stop within those rows 
-if i want to look at specific dates, could convert those to indx numbers 
-
-then, i could say "get any runs that have at least 12 mo data within cols X to Y which is 2016-20, and look 
-for a local minimum (impose a condition to say "no recovery event?") that is not within X months of the end of the period . If there is a recovery, find rate, if not, set to -1 for no significant 
-recovery event. Save the date of the local minimum as well" 
-
-Then for each pixel, I could have 2 things for each drought period I look at: 
--- recovery rate (-1 for no recovery)
--- date of minimum 
-
-Make a new DF with the location, TIST, county, and recovery rate and date for the two drought periods 
-
-issue: if there's 2 periods within row, and both contain data within the drought period I look at? 
-eg one has data 2013-2018, and other 2019-2023, and I look at 2016-2020. Not an issue 
-
-
-Alternative: look at each pixel and find 1-3 local minima below certain threshold
-Find recovery rates for each 
-Find dates for each 
-Categorize them per drought event by date -- only take biggest one for each time period? or most recent?
-using the magnitude of the reduction might not be best way? literature tends to use avg of
-the recovery rates if they find multiple recoveries in one pixel 
-
--- approach -  find the recovery rates and dates and see if the dates i'm finding as the recovery are
-all around a certain time or if they're really spread out? 
-
-am i being mathematically lazy/innaccurate if i just find recoveries by local minimum within time period on residual? 
-think no because a) have specific time for this specific area and b) using residual ? 
-
-
-'''
+# Grab the slices of the ndvi that we care about 
+valid_slices = ndvi_res.iloc[valid_rows, recov_start[0]+4:recov_stop[0]+4] # +4 because there are 4 extra columns at the front end of the df 
 
 ########### Calc recovery rate sample ##############3
 #pix is a pd series
-sample = pix['2019-01':'2020-06-01'].astype("float32") #get relevant part 
+sample = pix.astype("float32") #get relevant part 
 #-- now need to tell it where to look 
 #need to probably include clause that if the min isn't more than X% diff, then 
 #there was nothing to recover from 
 
-sample = sample[sample.values.argmin():-1] #get everything from minimum to the end  
+sample = sample[sample.values.argmin():(sample.values.argmin()+4)] #get 6 mo after the min 
 #change-- specify how long i'm looking for recovery? 
 x = range(sample.size) #make fake time data for this sample 
 
