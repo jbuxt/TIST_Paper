@@ -8,11 +8,16 @@ import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 from matplotlib.colors import ListedColormap
 from df_to_map import df_to_map
+import pickle
 
 county = input('Input the county to process: ')
 fname = 'ndvi_results_'+county+'.csv'
 
 ndvi_results = pd.read_csv('ndvi_results_'+county+'.csv')
+
+#get metadata back
+with open('veg_meta.pkl', 'rb') as file:
+    ndvi_meta, ndvi_bound =pickle.load(file)
 
 col_names_recov = ndvi_results.filter(like = 'recov').columns()
 col_names_rsq = ndvi_results.filter(like = 'rsq').columns()
