@@ -14,7 +14,9 @@ import pickle
 
 
 # Load the veg data #############################################
-ndvi_df = pd.read_csv('ndvi_pixels_Theraka.csv', nrows=1000) #TEMP for testing 
+county = input('Input the county to process: ')
+
+ndvi_df = pd.read_csv('ndvi_pixels_'+county+'.csv', nrows=1000) #TEMP for testing 
 
 nrows, dum = ndvi_df.shape
 # dates = pd.date_range(start='5/1/2013', periods=120, freq='MS')
@@ -80,11 +82,11 @@ ss_rows = np.floor(ss[:,0] / 121) #gives the row of the dataframe that it corres
 # del smoothed_ndvi_df #save space
 
 #Save to CSV 
-smoothed_ndvi_df.to_csv('ndvi_residuals_Tharaka.csv', encoding='utf-8', index=False)
+smoothed_ndvi_df.to_csv('ndvi_residuals_'+county+'.csv', encoding='utf-8', index=False)
 #Save the ss !!
 
-with open('Tharaka_ss.pkl', 'wb') as file:
+with open(county+'_ss.pkl', 'wb') as file:
     # A new file will be created
     pickle.dump([ss, ss_rows, ss_cols], file)
 
-print('done')
+print('donezo')
