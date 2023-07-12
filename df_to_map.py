@@ -7,12 +7,11 @@
 import numpy as np 
 from scipy.sparse import coo_matrix 
 import pandas as pd
+import rasterio as rs
 # import matplotlib.pyplot as plt 
 
-def df_to_map(df, col_names):
-    rows = 6871
-    cols = 8786
-    #know this based on my orginal region of interest
+def df_to_map(df, col_names, rows=6871, cols=8786, savefile=False, fname='output_map', meta=None):
+    #know rows/cols based on my orginal region of interest
 
     n_layers = len(col_names) #number of maps to make
     #initialize array of correct size with nan
@@ -24,7 +23,17 @@ def df_to_map(df, col_names):
         s_img = coo_matrix((df[vals], (df.row, df.col)), shape = (rows, cols))
         img = s_img.todense()
         array[:,:, x] = img
-        #probs need another loop for this 
+        
+    
+    if savefile:
+        meta['count'] = n_layers
+
+        with rs.open(fname,"w",**meta) as f:
+            # write the file path (a string) to the content of the raster
+            # file (it expects the mentioned array-like object from the
+            # error), will not work well, hence the error
+            f.write(array)
+            print('tif saved to: '+fname)
 
     return array
 
