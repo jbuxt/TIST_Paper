@@ -23,16 +23,27 @@ def df_to_map(df, col_names, rows=6871, cols=8786, savefile=False, fname='output
         s_img = coo_matrix((df[vals], (df.row, df.col)), shape = (rows, cols))
         img = s_img.todense()
         array[:,:, x] = img
+        #yhis fills with 0s -- how to not??
         
     
     if savefile:
         meta['count'] = n_layers
 
         with rs.open(fname,"w",**meta) as f:
-            # write the file path (a string) to the content of the raster
-            # file (it expects the mentioned array-like object from the
-            # error), will not work well, hence the error
-            f.write(array)
+            #python array is row, cols, depth
+            # rasterio expects band, row, col
+            #can do a 2d with indexes=1
+            for b in range(1, n_layers+1):
+
+                f.write(array[:,:,b-1], indexes=b)
+            # set layer descriptions 
+            f.descriptions=tuple(col_names)
+            #set empty to???
+
+            # bounds are set through affine- 
+            # has the top left coordinate, the scale of the pixels, and the rotation 
+            # this is also included in im.res and im.bounds 
+
             print('tif saved to: '+fname)
 
     return array
