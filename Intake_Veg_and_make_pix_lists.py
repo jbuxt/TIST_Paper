@@ -31,8 +31,8 @@ with open('county_mask.pkl', 'rb') as file:
 # Get lists of where each county is by index
 # Lai_idx = np.argwhere(county_mask == 1)
 # Mer_idx = np.argwhere(county_mask == 2)
-Tha_idx = np.argwhere(county_mask == 3)
-# Nye_idx = np.argwhere(county_mask == 4)
+# Tha_idx = np.argwhere(county_mask == 3)
+Nye_idx = np.argwhere(county_mask == 4)
 # Kir_idx = np.argwhere(county_mask == 5)
 # Emb_idx = np.argwhere(county_mask == 6)
 
@@ -67,10 +67,11 @@ cols = 8786
 n_months = 120 
 
 #Precipitation #####################################################3 
-dirname = './GEE_Precip'
+# dirname = './GEE_Precip'
 date_list = pd.date_range(start='5/1/2013', periods=120, freq='MS')
 col_names = ['row','col', 'tist', 'county']+([date.strftime('%Y-%m') for date in date_list])
 
+'''
 precip_df= pd.DataFrame(index=range(n_Theraka),columns=col_names)
 
 im_count = 0
@@ -153,7 +154,7 @@ print('done with precip theraka')
 
 # #Veg indices 
 dirname = './GEE_Veg_new'
-ndvi_df= pd.DataFrame(index=range(chunk),columns=col_names)
+ndvi_df= pd.DataFrame(index=range(n_Nyeri),columns=col_names)
 
 im_count = 0
 
@@ -199,8 +200,9 @@ for y in range(start_yr, end_yr+1):
 #end y 
 
 
-with open('ndvi_pixels_sample.pkl', 'wb') as file:
-    pickle.dump([ndvi_df, ndvi_meta, ndvi_bound], file)
+# with open('ndvi_pixels_sample.pkl', 'wb') as file:
+#     pickle.dump([ndvi_meta, ndvi_bound], file)
 
-print('done with ndvi first sample')                   
-'''
+ndvi_df.to_csv('ndvi_pixels_Nyeri.csv', encoding='utf-8', index=False)
+
+print('done with ndvi for Nyeri')                   

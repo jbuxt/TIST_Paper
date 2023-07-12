@@ -1,4 +1,5 @@
 # For making maps generally
+# And also for assessing number of missing pixels 
 
 # import geopandas as gp 
 import pandas as pd
@@ -21,14 +22,14 @@ img = df_to_map(ndvi, ['N_Missing', 'Longest_Missing_Streak'])
 
 
 #make histograms
-ndvi['N_Missing'].hist(by=ndvi['tist'], bins = range(0,100))
+ndvi['N_Missing'].hist( bins = range(0,100)) #by=ndvi['tist'],
 plt.title('Missing Months per Pixel (Tharaka)')
 plt.ylabel('count')
 plt.xlabel('number missing pixels')
 plt.legend()
 plt.savefig('./visuals/n_missing_tharaka.png')
 
-ndvi['Longest_Missing_Streak'].hist(by=ndvi['tist'], bins=range(0,25))
+ndvi['Longest_Missing_Streak'].hist( bins=range(0,25)) #by=ndvi['tist'],
 plt.title('Longest Missing Streak per Pixel (Tharaka)')
 plt.ylabel('count')
 plt.xlabel('number missing pixels in longest streak')
