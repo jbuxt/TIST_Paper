@@ -9,7 +9,7 @@ visuals/
 relevant_counties/
 relevant_tist_groves/
 study_box_shape/
-*.pkl
+
 *.html
 *.csv
 *.twb
