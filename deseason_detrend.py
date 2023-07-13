@@ -16,7 +16,7 @@ import pickle
 # Load the veg data #############################################
 county = input('Input the county to process: ')
 
-ndvi_df = pd.read_csv('ndvi_pixels_'+county+'.csv', nrows=1000) #TEMP for testing 
+ndvi_df = pd.read_csv('ndvi_pixels_'+county+'.csv') #TEMP for testing 
 
 nrows, dum = ndvi_df.shape
 # dates = pd.date_range(start='5/1/2013', periods=120, freq='MS')
