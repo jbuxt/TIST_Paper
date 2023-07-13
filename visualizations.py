@@ -25,8 +25,8 @@ img = df_to_map(ndvi, ['N_Missing', 'Longest_Missing_Streak'])
 #make histograms
 ndvi['N_Missing'].hist( bins = range(0,100)) #by=ndvi['tist'],
 plt.title('Missing Months per Pixel ('+county+')')
-plt.ylabel('count')
-plt.xlabel('number missing pixels')
+plt.ylabel('count of pixels')
+plt.xlabel('Number missing months')
 plt.legend()
 plt.savefig('./visuals/n_missing_'+county+'.png')
 
