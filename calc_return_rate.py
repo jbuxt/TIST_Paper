@@ -23,7 +23,7 @@ with open(county+'_ss.pkl', 'rb') as file:
    ss, ss_rows, ss_cols= pickle.load(file)
 ss_rows = ss_rows.astype('int')
    
-ndvi_res  = pd.read_csv('NDVI_residuals_'+county+'.csv') #only has 1000 rows atm 
+ndvi_res  = pd.read_csv('ndvi_residuals_'+county+'.csv') #only has 1000 rows atm 
  #nrows = 
     
 
