@@ -14,7 +14,7 @@ import pickle
 
 # get results you want to process
 county = input('Input the county to process: ')
-fname = 'ndvi_results_'+county+'.csv'
+# fname = 'ndvi_results_'+county+'.csv'
 
 ndvi_results = pd.read_csv('ndvi_results_'+county+'.csv')
 

@@ -18,8 +18,8 @@ from datetime import datetime as dt
 #################################################
 # Import county and tist masks 
 #################################################
-# county = input('Input the county to process: ')
-county = 'Nyeri'
+county = input('Input the county to process: ')
+# county = 'Nyeri'
 if county == 'Laikipia':
     county_int = 1
 elif county == 'Meru':

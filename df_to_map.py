@@ -10,7 +10,7 @@ import pandas as pd
 import rasterio as rs
 # import matplotlib.pyplot as plt 
 
-def df_to_map(df, col_names, rows=6871, cols=8786, savefile=False, fname='output_map', meta=None):
+def df_to_map(df, col_names, rows=6871, cols=8786, savefile=False, fname='output_map.tif', meta=None):
     #know rows/cols based on my orginal region of interest
 
     n_layers = len(col_names) #number of maps to make
