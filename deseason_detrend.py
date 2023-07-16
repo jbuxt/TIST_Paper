@@ -14,8 +14,8 @@ import pickle
 
 
 # Load the veg data #############################################
-# county = input('Input the county to process: ')
-county = 'Tharaka'
+county = input('Input the county to process: ')
+# county = 'Tharaka'
 
 ndvi_df = pd.read_csv('ndvi_pixels_'+county+'.csv') #TEMP for testing 
 
