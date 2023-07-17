@@ -17,7 +17,6 @@ import pickle
 from scipy.optimize import curve_fit
 
 county = input('Input the county to process: ')
-plot = True
 
 with open(county+'_ss.pkl', 'rb') as file:
    ss, ss_rows, ss_cols= pickle.load(file)
