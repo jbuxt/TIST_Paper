@@ -17,14 +17,23 @@ import pickle
 county = input('Input the county to process: ')
 # county = 'Tharaka'
 
-ndvi_df = pd.read_csv('ndvi_pixels_'+county+'.csv') #TEMP for testing 
+ndvi_df = pd.read_csv('ndvi_pixels_'+county+'.csv') #TEMP for testing , nrows =1000
 
 nrows, dum = ndvi_df.shape
-# dates = pd.date_range(start='5/1/2013', periods=120, freq='MS')
+dates = pd.date_range(start='5/1/2013', periods=120, freq='MS')
 
 #interpolate up to 2 missing points since a season is usually 3 months
 # will lose about 20% ? of pixels this way 
 smoothed_ndvi_df = ndvi_df.iloc[:, 4:].astype("float32").interpolate(method='linear', limit=2, axis = 1, limit_area='inside')
+
+# Get an example plot
+# plt.plot(dates, ndvi_df.iloc[55, 4:], 'go')
+# plt.plot(dates, smoothed_ndvi_df.iloc[55, :], 'b-')
+# plt.title('Example linear interpolation (Tharaka)')
+# plt.xlabel('date')
+# plt.ylabel('NDVI value')
+# plt.legend('original', 'filled')
+# plt.show()
 
 # del ndvi_df # save space 
 #add a nan column to the end after interpolation so that it always splits on that 
