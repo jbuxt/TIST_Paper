@@ -22,8 +22,8 @@ with open(county+'_ss.pkl', 'rb') as file:
    ss, ss_rows, ss_cols= pickle.load(file)
 ss_rows = ss_rows.astype('int')
    
-ndvi_res  = pd.read_csv('ndvi_residuals_'+county+'.csv') #only has 1000 rows atm 
- #nrows = 
+ndvi_res  = pd.read_csv('ndvi_residuals_'+county+'.csv', index_col=0) #only has 1000 rows atm 
+#keep the index column as that is what the ss_rows corresponds to: 
     
 
 #### Calculate the recovery rates based on NDMA drought classification dates #####################
@@ -33,7 +33,7 @@ if county == 'Laikipia':
 elif county == 'Meru':
     recovery_idx = np.array([42, 54, 59, 77]) #ignore 119 
 elif county == 'Tharaka':
-    recovery_idx = np.array([59, 77, 116])#Apr 18, Oct 19, Jan 23 (ignored  104, 107, because those are kinda blips in the middle of drought)
+    recovery_idx = np.array([59, 77])#Apr 18, Oct 19, Jan 23 (ignored  104, 107, 116 because those are kinda blips in the middle of drought or too close to end )
 elif county == 'Nyeri':
     recovery_idx = np.array([54, 59, 77]) #ignore 119
 # elif county == 'Kirinyaga':
@@ -62,7 +62,7 @@ ss_overlap = ss_overlap.astype('bool')
 # initialize a df for results 
 ndvi_results = ndvi_res.copy()
 ndvi_results.iloc[:,4:] = np.nan
-ndvi_results = ndvi_results.drop(columns='empty')
+ndvi_results.drop(columns='empty', inplace= True)
 hlist1 = ['recov_rate_'+str(h) for h in recovery_idx]
 hlist2 = ['rsq_'+str(h) for h in recovery_idx]
 hlist1 = hlist1+ hlist2
