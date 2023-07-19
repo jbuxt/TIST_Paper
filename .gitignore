@@ -8,7 +8,8 @@
 visuals/
 relevant_counties/
 relevant_tist_groves/
-study_box_shape/
+
+study_box_shape*/
 *_ss.pkl
 *.tif
 *.html
@@ -17,4 +18,5 @@ study_box_shape/
 *.qgz
 *.png
 *.pyc
-RESULTS/
+*.xml
+RESULTS*/
