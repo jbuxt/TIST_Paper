@@ -14,21 +14,19 @@ import pickle
 lon, lat = 37.61, 0.18 
 my_map = f.Map(location=[lat, lon], zoom_start=8)
 
-
-# how to change colors
 # add some rasters of ndvi, landcover, ecoregion 
-# what is displayed with clicking? 
-
-
-
+ 
 
 # tpath = 'relevant_tist_groves/Relevant_Tist_groves.shp'
 # cpath = 'relevant_counties/Relevant_Counties.shp'
 
 # tist_gp = gp.read_file(tpath) #
 # counties_gp = gp.read_file(cpath) #EPSG4326
+
 with open('tist_and_counties_gp.pkl', 'rb') as file:
    tist_gp, counties_gp= pickle.load(file)
+
+
 
 #https://leafletjs.com/reference.html#path
 #all the style things 
@@ -41,8 +39,7 @@ with open('tist_and_counties_gp.pkl', 'rb') as file:
 #     {"fillColor": "#ccffff", "fillOpacity": 0.3,"weight": 2, "color": "black"},
 #     {"fillColor": "#e5ccff", "fillOpacity": 0.3,"weight": 2, "color": "black"}
 # ]
-# tist_gjson = tist_gp.to_json()
-# counties_gjson = counties_gp.to_json()
+
 
 tist_popup = GeoJsonPopup(
     fields=['Trees', "Name"],
@@ -71,18 +68,15 @@ f.GeoJson(counties_gp, name='Counties of Interest',
             "color": colormap[x["properties"]["COUNTY"]],
             "fillOpacity": 0.4},
           popup=count_popup).add_to(my_map)
-# counties = f.features.GeoJson(counties_gjson, name='Counties of Interest',
-#                               style=counties_gjson['style'],
-#                               popup=count_popup).add_to(my_map)
 
 f.GeoJson(tist_gp, name='TIST Groves',
         # style_function={"fillColor": "#00cc66", "fillOpacity": 0.3,"weight": 1, "color": "#00cc66"},
         popup=tist_popup).add_to(my_map)
 
 
-# my_map.add_child(counties)
-# my_map.add_child(tist_farms)
-# for farm in 
+landcover = rs.open('landcover_WorldCoverv100_reprojected(1).tif')
+ecoregions = rs.open('ecoregions_rasterized.tif')
+
 
 '''
 tooltip = GeoJsonTooltip(
