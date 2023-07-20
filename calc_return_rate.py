@@ -14,6 +14,7 @@ import pandas as pd
 import numpy as np 
 import pickle
 # import numpy.ma as ma 
+import matplotlib.pyplot as plt
 from scipy.optimize import curve_fit
 
 county = input('Input the county to process: ')
@@ -75,6 +76,9 @@ for z in range(n_recovs):
     # Grab the slices of the ndvi that we care about 
     valid_slices = ndvi_res.iloc[valid_rows, recov_start[z]+4:recov_stop[z]+5] # +4 because there are 4 extra columns at the front end of the df
     # and +5 because want the recovery stop to be inclusive  
+    
+    #get the means for those rows (can use loc and iloc interchangeably still because no deleted rows yet)
+    valid_means = ndvi_res.loc[valid_rows, 'mean']
 
     # Initialize an array to hold the resulting recovery rates and Rsq and fitted eqs for graphing 
     recov_rates = np.empty(n_valid_rows)
@@ -90,6 +94,11 @@ for z in range(n_recovs):
         row = valid_slices.iloc[n, :]
         local_min = row.values.argmin()
         sample = row[local_min:] #Find the min within this time and start there 
+        # concat the mean of the residuals to the end of the sample to make sure it recovers to the 'normal' state
+        # and to deal with any recoveries that are very high residuals 
+        temp = np.zeros(12)
+        temp[:] = valid_means.iloc[n]
+        sample = pd.concat([sample, pd.Series(temp)]) 
         x = range(sample.size) #make fake time data for this sample 
         try:
             popt, pcov = curve_fit(lambda t, a, b, c: a*np.exp(b*t)+c, x, sample, 
@@ -108,6 +117,10 @@ for z in range(n_recovs):
             ss_tot = np.nansum((sample - sample.mean())**2)
             rsquared = 1 - (ss_res/ss_tot)
 
+            plt.plot(x, sample, 'r*')
+            plt.plot(x, y_curvefitted, 'b-')
+            plt.show()
+
         except Exception as e: 
             # print(e)
             # if you can't calculate for some reason set to 10 (nan signifies empty/not attempted)
@@ -120,7 +133,7 @@ for z in range(n_recovs):
 
         recov_rates[n] = r
         Rsq[n] = rsquared
-        fits[n, local_min:] = y_curvefitted
+        fits[n, local_min:] = y_curvefitted[0:-12] #don't keep the extra 12 mo for the plotting 
 
     # Save the lists for each recovery date to the final df 
     ndvi_results.loc[valid_rows, 'recov_rate_'+str(recovery_idx[z])] = recov_rates
@@ -129,10 +142,8 @@ for z in range(n_recovs):
     print('recovery done- '+str(z))
 
 ndvi_results.dropna(axis=0, thresh=8, inplace=True, ignore_index=False) #drop any rows that don't have at least 8 non empty cells (4 for the labels and 4+ results)
-# keep the index labels 
+# keep the index labels- MUST USE LOC FROM HERE ON OUT 
 #Save to a csv 
-ndvi_results.to_csv('ndvi_results_'+county+'.csv', encoding='utf-8')
-
-
+ndvi_results.to_csv('ndvi_results_'+county+'.csv', encoding='utf-8', index=True)
 
 print('donezo')
