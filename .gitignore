@@ -21,4 +21,4 @@ study_box_shape*/
 *.pyc
 *.xml
 RESULTS*/
-*pkl
+*.pkl
