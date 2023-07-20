@@ -6,9 +6,10 @@
 /GEE_Precip 
 /GEE_Veg_new
 visuals/
-relevant_counties/
-relevant_tist_groves/
-
+relevant_counties*/
+relevant_tist*/
+visuals*/
+s2_roi_shape/
 study_box_shape*/
 *_ss.pkl
 *.tif
@@ -20,3 +21,4 @@ study_box_shape*/
 *.pyc
 *.xml
 RESULTS*/
+*pkl

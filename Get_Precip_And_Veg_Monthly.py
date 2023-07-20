@@ -131,12 +131,12 @@ def monthlyMax(collection, yrs, mos, geom, scale, crs):
 
 start_date = '2015-07-01' #inclusive
 end_date = '2016-01-01' #exclusive
-#get to 2023 05 01
+#get to 2023 07 01
 startyr = 2015
 endyr = 2016
-yrs = ee.List.sequence(startyr, endyr)
+# yrs = ee.List.sequence(startyr, endyr)
 mos = range(1,13)
-#yrs = [2015]
+yrs = [2015]
 '''
 # ADD chirps precip data 
 dataset = ee.ImageCollection('UCSB-CHG/CHIRPS/DAILY').filterDate(start_date, end_date)
@@ -201,7 +201,8 @@ tasks = batch.Export.imagecollection.toDrive(collection=veg,
                                              namePattern= '{system_date}',
                                              region=box, scale=10,
                                              crs = 'EPSG:4326',
-                                             datePattern='yyyyMMdd') 
+                                             datePattern='yyyyMMdd',
+                                             maxPixels = 250000000) 
 
 
 #plot monthly max NDVI+MSAVI2 over years  
