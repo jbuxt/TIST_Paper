@@ -13,7 +13,7 @@ cpath = 'relevant_counties/Relevant_Counties.shp' #oops deleted the original dow
 tist = gp.read_file(tpath) #
 all_counties = gp.read_file(cpath) #EPSG4326
 #select relevant counties 
-counties = all_counties[(all_counties.COUNTY).isin(['Meru', 'Tharaka', 'Laikipia', 'Nyeri'])] #skipping embu
+counties = all_counties[(all_counties.COUNTY).isin(['Meru', 'Tharaka', 'Laikipia', 'Nyeri', 'Embu'])] #skipping kirinyaga because no drought classifications
 
 #Get only TIST groves within the relevant counties 
 #have to do a spatial join because looking at NxM comparison
@@ -22,8 +22,8 @@ counties = all_counties[(all_counties.COUNTY).isin(['Meru', 'Tharaka', 'Laikipia
 #need to check how many i'm really expecting 
 tist_in = gp.sjoin(tist, counties[['COUNTY', 'geometry']], how='inner', op='within')
 
-tist_in.to_file('Relevant_Tist_groves.shp')
-counties.to_file('Relevant_Counties.shp')
+# tist_in.to_file('Relevant_Tist_groves.shp')
+# counties.to_file('Relevant_Counties.shp')
 
 
 with open('relevant_tist.pkl', 'wb') as file:

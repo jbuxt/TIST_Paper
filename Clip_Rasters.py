@@ -7,7 +7,7 @@ from rasterio import features
 import numpy as np 
 import matplotlib.pyplot as plt 
 import pickle
-import numpy.ma as ma 
+#import numpy.ma as ma 
 
 
 with open('relevant_tist.pkl', 'rb') as file:
@@ -16,15 +16,24 @@ with open('relevant_tist.pkl', 'rb') as file:
 with open('relevant_counties.pkl', 'rb') as file:
     counties = pickle.load(file)
 
-im = rs.open('ecoregions_rasterized_10m.tif')
+with open('veg_meta.pkl', 'rb') as file:
+    veg_meta, veg_bound = pickle.load(file)
+
+im = rs.open('ecoregions_rasterized.tif')
 ecoregion = im.read(1)
 eco_meta = im.meta
 plt.imshow(ecoregion)
 
-im = rs.open('landcover_WorldCoverv100_10m.tif')
+im = rs.open('landcover_WorldCoverv100_reprojected.tif')
 landcover= im.read(1)
 landcover_meta = im.meta
 plt.imshow(landcover)
+
+with open ('ecoregion_mask.pkl', 'wb') as file:
+    pickle.dump(ecoregion, file)
+
+with open ('landcover_mask.pkl', 'wb') as file:
+    pickle.dump(landcover, file)
 
 #####################################################
 # Make an outline of the entire study area 
@@ -44,23 +53,27 @@ county_mask = features.rasterize(
     ## 2 = Meru (16)
     ## 3 = Tharaka (22) 
     ## 4 = Nyeri (25)
+    ## 5 = Embu (29)
+
              [(counties.loc[0, 'geometry'], 1), (counties.loc[1, 'geometry'], 2),
-               (counties.loc[2, 'geometry'], 3), (counties.loc[3, 'geometry'], 4)],
-            out_shape=ecoregion.shape,
-            transform=eco_meta['transform'],
+               (counties.loc[2, 'geometry'], 3), (counties.loc[3, 'geometry'], 4),
+               (counties.loc[5, 'geometry'], 5)],
+            out_shape=[int(veg_meta['height']), int(veg_meta['width'])],
+            transform=veg_meta['transform'],
             all_touched = True)
 
 plt.imshow(county_mask)
 plt.show()
-
+# rows = 6871 #in total picture
+# cols = 8786
 with open ('county_mask.pkl', 'wb') as file:
     pickle.dump(county_mask, file)
 
 TIST_mask = features.rasterize(
     ## make a mask of all pixels in TIST groves
             TIST.geometry,
-            out_shape=ecoregion.shape,
-            transform=eco_meta['transform'],
+            out_shape=[veg_meta['height'], veg_meta['width']],
+            transform=veg_meta['transform'],
             all_touched = True)
 plt.imshow(TIST_mask)
 plt.show()
@@ -74,10 +87,6 @@ with open ('TIST_mask.pkl', 'wb') as file:
     pickle.dump(TIST_mask, file)
 
 
-with open ('ecoregion_mask.pkl', 'wb') as file:
-    pickle.dump(ecoregion, file)
 
-with open ('landcover_mask.pkl', 'wb') as file:
-    pickle.dump(landcover, file)
 
 print('done')
