@@ -2,7 +2,7 @@
 ## 2023
 ## import tif files
 ## and put pixels into a df through time
-## apply tist, ecoregion, landcover, and county mask and mark pixels appropriately 
+## apply tist, and county mask and mark pixels appropriately 
 ## and then put those pixels into separate lists 
 ## then save them for loading later 
 
@@ -27,6 +27,8 @@ elif county == 'Tharaka':
     county_int = 3
 elif county == 'Nyeri':
     county_int = 4
+elif county == 'Embu':
+    county_int = 5
 else: 
     print('incorrect county entered')
     #program will crash later lol
@@ -39,18 +41,18 @@ with open('county_mask.pkl', 'rb') as file:
     ## 3 = Tharaka (22) 
     ## 4 = Nyeri (25)
 
-#IMPORT ECOREGIONS AND LANDCOVER MASK 
+#IMPORT ECOREGIONS AND LANDCOVER MASK -- not used until later rn 
 #landcover_mask
-with open('landcover_mask.pkl', 'rb') as file:
-    landcover_mask = pickle.load(file)
-#ecoregion_mask
-with open('ecoregion_mask.pkl', 'rb') as file:
-    ecoregion_mask = pickle.load(file)
+# with open('landcover_mask.pkl', 'rb') as file:
+#     landcover_mask = pickle.load(file)
+# #ecoregion_mask
+# with open('ecoregion_mask.pkl', 'rb') as file:
+#     ecoregion_mask = pickle.load(file)
 
 # Get lists of where each county is by index AND where landcover <= 40 
 #only keeping grassland, shrubland, cropland, and forest
 #not sure if this works or need to do in 2 steps 
-county_idx = np.argwhere((county_mask == county_int) and (landcover_mask <= 40))
+county_idx = np.argwhere(county_mask == county_int) #and (landcover_mask <= 40))
 
 del county_mask #save space
 
@@ -64,34 +66,32 @@ with open('tist_mask.pkl', 'rb') as file:
 
 #start and end months we want to work with
 #filenames are yyyyMMdd
-#study time range is 2015 07 01 to 2023 06 31 inclusive
-start_yr = 2015
+#study time range is 2013 05 01 to 2023 04 30 inclusive
+start_yr = 2013
 end_yr = 2023
 
 # #Number of pixels in each county: 
-# n_Laikipia = 
-# n_Meru =
-# n_Theraka = 
-# n_Nyeri = 
+# n_Laikipia = 10837687 
+# n_Meru = 7720270
+# n_Theraka = 2990072
+# n_Nyeri = 3733796
+# n_Kirinyaga = 1652252
+# n_Embu = 3170195
+
+rows = 6871 #in total picture
+cols = 8786
+
+# n_ROI = 30104272 #all counties 
+n_months = 120 
 
 n_county, dummy = np.shape(county_idx)
-
-rows = 11252 #in total picture #CEHCK THIS 
-cols = 21281
-# 'width':
-# 21281
-# 'height':
-# 11252
-
-# n_ROI =  #all counties 
-n_months = 96
 
 #Precipitation #####################################################
 #NOT DOING PRECIP ANYMORE AT LEAST RIGHT NOW 
 # dirname = './GEE_Precip'
-date_list = pd.date_range(start='7/1/2015', periods=96, freq='MS') #CHANGE 
-col_names = ['row','col', 'tist', 'county', 'landcover', 'ecoregion']+([date.strftime('%Y-%m') for date in date_list])
-
+date_list = pd.date_range(start='5/1/2013', periods=n_months, freq='MS') 
+col_names = ['row','col', 'tist', 'county']+([date.strftime('%Y-%m') for date in date_list])
+# col_names = ['row','col', 'tist', 'county', 'landcover', 'ecoregion']+([date.strftime('%Y-%m') for date in date_list])
 
 # precip_df= pd.DataFrame(index=range(n_county),columns=col_names)
 
@@ -141,7 +141,7 @@ col_names = ['row','col', 'tist', 'county', 'landcover', 'ecoregion']+([date.str
 
 
 # #Veg indices 
-dirname = './GEE_Veg_S2'
+dirname = './GEE_Veg_new'
 ndvi_df= pd.DataFrame(index=range(n_county),columns=col_names)
 
 im_count = 0
@@ -171,8 +171,8 @@ for y in range(start_yr, end_yr+1):
                     ndvi_df.at[p, 'col'] = j
                     ndvi_df.at[p, 'county'] = county_int
                     ndvi_df.at[p, 'tist'] = tist_mask[i, j]
-                    ndvi_df.at[p, 'landcover'] = landcover_mask[i, j]
-                    ndvi_df.at[p, 'ecoregion'] = ecoregion_mask[i, j]
+                    # ndvi_df.at[p, 'landcover'] = landcover_mask[i, j]
+                    # ndvi_df.at[p, 'ecoregion'] = ecoregion_mask[i, j]
                     ndvi_df.at[p, date] = im_array[i, j]
                     
                 else: #not the first image processed
