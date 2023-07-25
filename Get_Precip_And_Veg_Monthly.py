@@ -27,7 +27,7 @@ task = batch.Export.table.toDriveShapefile(collection = box_col, folder='Shape_F
 # #################################/
 # clip to area
 def clip_img(image):
-    return image.clip(box)
+    return image.clip(ROI)
 
 # calculate and add an NDVI band
 def addNDVI(image):
@@ -87,7 +87,7 @@ def maskS2clouds(image):
 #     return img_col
 
 #create monthly max from input image collection 
-def monthlyMax(collection, yrs, mos, geom, scale, crs):
+def monthlyMax(collection, yrs, mos):
     maxes = []
     for year in yrs:
         for mo in mos: 
@@ -194,13 +194,13 @@ landcover = ee.ImageCollection("ESA/WorldCover/v100").first().clip(ROI)
 
 #need to specify the scale because it doesn't automatically keep that 
 # for sentinel2, the scale is 10 m and projection is epsg 32628
-veg = monthlyMax(ndvi, yrs, mos, box, 10, 'EPSG:4326') 
+veg = monthlyMax(ndvi, yrs, mos) 
 
 #START HERE
 tasks = batch.Export.imagecollection.toDrive(collection=veg, 
                                              folder='GEE_Veg_S2', 
                                              namePattern= '{system_date}',
-                                             region=box, scale=10,
+                                             region=ROI, scale=10,
                                              crs = 'EPSG:4326',
                                              datePattern='yyyyMMdd') 
 
