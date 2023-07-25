@@ -16,7 +16,7 @@ ee.Initialize(credentials, project='ee-maddiehenderson12')
 
 ## createshapes 
 #Get a rectangle that encompasses the region of interest
-ROI = ee.Geometry.Rectangle([37.418438390871614, -0.46499883273351506, 38.291851476809114, 0.4303777575597561])
+ROI = ee.Geometry.Rectangle([36.11092694867859, -0.9639821313886587, 38.47870637456082, 0.8877151637669112])
 box_col = ee.FeatureCollection([ROI])
 
 task = batch.Export.table.toDriveShapefile(collection = box_col, folder='Shape_FINAL')
