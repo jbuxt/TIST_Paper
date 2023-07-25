@@ -19,22 +19,6 @@ with open('relevant_counties.pkl', 'rb') as file:
 with open('veg_meta.pkl', 'rb') as file:
     veg_meta, veg_bound = pickle.load(file)
 
-im = rs.open('ecoregions_rasterized.tif')
-ecoregion = im.read(1)
-eco_meta = im.meta
-plt.imshow(ecoregion)
-
-im = rs.open('landcover_WorldCoverv100_reprojected.tif')
-landcover= im.read(1)
-landcover_meta = im.meta
-plt.imshow(landcover)
-
-with open ('ecoregion_mask.pkl', 'wb') as file:
-    pickle.dump(ecoregion, file)
-
-with open ('landcover_mask.pkl', 'wb') as file:
-    pickle.dump(landcover, file)
-
 #####################################################
 # Make an outline of the entire study area 
 # counties['roi_col'] = 1
@@ -85,8 +69,5 @@ plt.show()
 
 with open ('TIST_mask.pkl', 'wb') as file:
     pickle.dump(TIST_mask, file)
-
-
-
 
 print('done')
