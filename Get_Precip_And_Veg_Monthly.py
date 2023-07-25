@@ -65,7 +65,7 @@ def monthlyMax(collection, yrs, mos):
                                   .set({'month': mo, 
                                         'year': year, 
                                         'system:time_start': ee.Date.fromYMD(year, mo, 1).millis()})\
-                                   .setDefaultProjection('EPSG:32635', [10,0,499980,0,-10,8200020])
+                                   .setDefaultProjection('EPSG:32755', [10, 0, 300000, 0, -10, 8100040]) #same as default S2 projection
             maxes.append(month_max) #list of images of each month
 
     img_col = ee.ImageCollection.fromImages(maxes)
@@ -86,11 +86,11 @@ def reduce(image):
 ###################################
 
 start_date = '2015-12-01' #inclusive
-end_date = '2017-01-01' #exclusive
+end_date = '2016-01-01' #exclusive
 #get to 2023 07 01
 startyr = 2015
-endyr = 2017
-mos = range(1,13)
+endyr = 2016
+mos = range(12,13)
 yrs = range(startyr, endyr)
 
 ###############################################################################   
@@ -119,13 +119,14 @@ ndvi = s2.map(addNDVI).select('NDVI').map(mask_col) # up to here is fine for val
 # for sentinel2, the scale is 10 m and projection is epsg 32628
 veg = monthlyMax(ndvi, yrs, mos) #printing this deadlocks 
 ''' [{'id': 'NDVI', 'data_type': {'type': 'PixelType', 'precision': 'float', 'min': -1, 'max': 1}, 'crs': 'EPSG:32635', 'crs_transform': [10, 0, 499980, 0, -10, 8200020]'''
-veg_30m = veg.map(reduce) #take mean of pixels to get desired res
-#START HERE
-tasks = batch.Export.imagecollection.toDrive(collection=veg_30m, 
+# veg_30m = veg.map(reduce) #take mean of pixels to get desired res
+
+tasks = batch.Export.imagecollection.toDrive(collection=veg,  #CHANGE THIS
                                              folder='GEE_Veg_S2_20m', 
                                              namePattern= '{system_date}',
-                                             region=ROI, scale=20, #reduce by 1/2 for memory purposes
-                                             crs = 'EPSG:4326',
+                                             region=ROI, scale=10, #reduce by 1/2 for memory purposes
+                                             crs = 'EPSG:4326', 
+                                             #crsTransform = [20, 0, 300000, 0, -20, 8100040], #native except changed to 20m res 
                                              datePattern='yyyyMMdd') 
 
 
