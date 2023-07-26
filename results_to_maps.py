@@ -16,7 +16,7 @@ import pickle
 county = input('Input the county to process: ')
 # fname = 'ndvi_results_'+county+'.csv'
 
-# ndvi_results = pd.read_csv('ndvi_results_'+county+'.csv')
+ndvi_results = pd.read_csv('ndvi_results_'+county+'.csv')
 
 
 #get metadata back
@@ -27,8 +27,7 @@ col_names = ndvi_results.filter(like = 'recov').columns.values.tolist() + ndvi_r
     
 ndvi_results_array = df_to_map(ndvi_results, col_names, savefile=True, 
                              fname='ndvi_results_'+county+'.tif', meta=ndvi_meta)
-# ndvi_rsq_array = df_to_map(ndvi_results, col_names_rsq, savefile=True, 
-#                              fname='ndvi_results_'+county+'.tif', meta=ndvi_meta)
+
 plt.imshow(ndvi_results_array[:,:,0])
 #NOTE that it gets filled with zeros -- 
 print('donezo')
