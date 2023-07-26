@@ -20,5 +20,6 @@ study_box_shape*/
 *.png
 *.pyc
 *.xml
-RESULTS*/
+/RESULTS*/
 *.pkl
+/param_testing/

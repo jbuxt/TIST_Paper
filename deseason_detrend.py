@@ -17,7 +17,7 @@ import pickle
 county = input('Input the county to process: ')
 # county = 'Tharaka'
 
-ndvi_df = pd.read_csv('./intermediate landsat things/ndvi_pixels_'+county+'.csv', nrows=1000) #TEMP for testing , nrows =1000
+ndvi_df = pd.read_csv('./intermediate_landsat/ndvi_pixels_'+county+'.csv') #TEMP for testing , nrows =1000
 
 nrows, dum = ndvi_df.shape
 dates = pd.date_range(start='5/1/2013', periods=120, freq='MS')
