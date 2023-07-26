@@ -5,6 +5,7 @@ import pandas as pd
 import folium as f
 from folium.features import GeoJsonPopup, GeoJsonTooltip
 import matplotlib.pyplot as plt
+import matplotlib as mpl
 import rasterio as rs
 import geopandas as gp
 import numpy as np
@@ -14,7 +15,11 @@ import pickle
 lon, lat = 37.61, 0.18 
 my_map = f.Map(location=[lat, lon], zoom_start=8)
 
-# add some rasters of ndvi, landcover, ecoregion 
+###############################
+#STYLE 
+
+ndvi_cm = mpl.colormaps['viridis']#.resampled(number) 
+
  
 
 # tpath = 'relevant_tist_groves/Relevant_Tist_groves.shp'
@@ -26,6 +31,8 @@ my_map = f.Map(location=[lat, lon], zoom_start=8)
 with open('tist_and_counties_gp.pkl', 'rb') as file:
    tist_gp, counties_gp= pickle.load(file)
 
+with open('veg_meta.pkl', 'rb') as file:
+   veg_meta, veg_bounds=pickle.load(file)
 
 
 #https://leafletjs.com/reference.html#path
@@ -74,8 +81,23 @@ f.GeoJson(tist_gp, name='TIST Groves',
         popup=tist_popup).add_to(my_map)
 
 
-landcover = rs.open('landcover_WorldCoverv100_reprojected(1).tif')
-ecoregions = rs.open('ecoregions_rasterized.tif')
+# landcover = rs.open('landcover_WorldCoverv100_reprojected(1).tif')
+# ecoregions = rs.open('ecoregions_rasterized.tif')
+
+with rs.open('RESULTS\0_no_thresholds_and_STL\ndvi_results_Tharaka.tif') as im:
+   tharaka = im.read() #should have several layers 
+   tharaka_meta = im.meta
+   t_bounds = im.bounds
+
+my_map.add_child(f.raster_layers.ImageOverlay(tharaka[:, :, 0],
+                  bounds=veg_bounds,
+                  #colormap = ,
+                  name = 'Tharaka Recovery 1',
+                  ))
+
+''' Function of the form [x -> (r,g,b)] or [x -> (r,g,b,a)] for transforming a mono image into RGB. 
+It must output iterables of length 3 or 4, with values between 0 and 1. 
+Hint: you can use colormaps from matplotlib.cm.'''
 
 
 '''
