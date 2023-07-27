@@ -9,6 +9,7 @@ import matplotlib as mpl
 import rasterio as rs
 import geopandas as gp
 import numpy as np
+import numpy.ma as ma
 import pickle
 
 # Define the center of map
@@ -18,7 +19,11 @@ my_map = f.Map(location=[lat, lon], zoom_start=8)
 ###############################
 #STYLE 
 
-ndvi_cm = mpl.colormaps['viridis']#.resampled(number) 
+recov_cm = mpl.colormaps['viridis']
+# Recov Rate (add missing missing and not calculated vals )
+missing_cm = mpl.colormaps['Purples'].resampled(120) #up to 120 months missing 
+ndvi_cm = mpl.colormaps['Greens']
+
 
  
 
@@ -80,20 +85,35 @@ f.GeoJson(tist_gp, name='TIST Groves',
         # style_function={"fillColor": "#00cc66", "fillOpacity": 0.3,"weight": 1, "color": "#00cc66"},
         popup=tist_popup).add_to(my_map)
 
-
 # landcover = rs.open('landcover_WorldCoverv100_reprojected(1).tif')
 # ecoregions = rs.open('ecoregions_rasterized.tif')
 
-with rs.open('RESULTS\0_no_thresholds_and_STL\ndvi_results_Tharaka.tif') as im:
-   tharaka = im.read() #should have several layers 
-   tharaka_meta = im.meta
-   t_bounds = im.bounds
+with rs.open('RESULTS/ndvi_missing_Meru.tif') as im:
+   meru = im.read() #should have several layers 
+  #  deal with nan???
+   meru_meta = im.meta
+   t_bounds = [[im.bounds[0], im.bounds[1]], [im.bounds[2], im.bounds[3]]]
+   t_bands = im.descriptions
+# Might need to mask wth np
+#data = ma.masked_invalid(meru[:,:,0])
+#colored_data = missing_cm(data)
+# also might need to normalize data? unclear
+#think it has to be 0-255 
+# let zeros be the nodata value that i will make clear 
 
-my_map.add_child(f.raster_layers.ImageOverlay(tharaka[:, :, 0],
-                  bounds=veg_bounds,
-                  #colormap = ,
-                  name = 'Tharaka Recovery 1',
-                  ))
+scaled_meru0 = np.round(((meru[0,:,:] - 0) * (1/(meru[0,:,:].max() - 0) * 255)), 0).astype('uint8')
+scaled_meru1 = np.round(((meru[1,:,:] - 0) * (1/(meru[1,:,:].max() - 0) * 255)),0).astype('uint8')
+
+f.raster_layers.ImageOverlay(scaled_meru1,
+                  bounds=t_bounds, #[[lat_min, lon_min], [lat_max, lon_max]]
+                  colormap = mpl.colormaps['Purples'], #can't call colormap on the array here, also doesn't like colored data in the first part 
+                  name = 'Longest missing streak',
+                  ).add_to(my_map)
+f.raster_layers.ImageOverlay(scaled_meru0,
+                  bounds=t_bounds, #[[lat_min, lon_min], [lat_max, lon_max]]
+                  colormap = mpl.colormaps['Greens'], #can't call colormap on the array here, also doesn't like colored data in the first part 
+                  name = '% Months missing',
+                  ).add_to(my_map)
 
 ''' Function of the form [x -> (r,g,b)] or [x -> (r,g,b,a)] for transforming a mono image into RGB. 
 It must output iterables of length 3 or 4, with values between 0 and 1. 
@@ -124,7 +144,7 @@ my_map.add_child(f.LayerControl())
 my_map.save('intro_map.html')
 
 print('donezo')
-
+'''
 ##############################
 # VIS PARAMS
 ##############################
@@ -145,3 +165,15 @@ rgbVis = {
   'min': 0.0,
   'max': 0.3
 }
+'''
+### FUTURE 
+#https://stackoverflow.com/questions/58227034/png-image-not-being-displayed-on-folium-map
+# Display a graph of the recovery rate at selected points?? could be very fun 
+
+
+## discrete colormap?
+## An alternative could be to specify colors accompanied with the respective values.
+
+# colors = [(0, "white"), (1./3.5, "green"), (1.5/3.5, "green"),
+#           (1.501/3.5, "red"), (2.5/3.5, "red"), (2.501/3.5, "gray"), (1, "gray") ]
+# mycmap = mcolors.LinearSegmentedColormap.from_list('my_colormap', colors)
