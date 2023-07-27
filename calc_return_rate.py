@@ -19,23 +19,23 @@ from scipy.optimize import curve_fit
 # county = input('Input the county to process: ')
 county = 'Tharaka'
 
-with open('./intermediate_landsat/'+county+'_ss.pkl', 'rb') as file:
-   ss, ss_rows, ss_cols= pickle.load(file)
-ss_rows = ss_rows.astype('int')
+# with open('./intermediate_landsat/'+county+'_ss.pkl', 'rb') as file:
+#    ss, ss_rows, ss_cols= pickle.load(file)
+# ss_rows = ss_rows.astype('int')
    
 #CHGNE TO BE FROM INTERMEDIATE FOLDER IF NECESSARY
 #ADD INDX COL = 0 BACK IN BEFORE DOING ON SERVER
-ndvi_res  = pd.read_csv('./intermediate_landsat/ndvi_residuals_'+county+'.csv',  nrows = 5000) 
+ndvi_res  = pd.read_csv('ndvi_residuals_'+county+'_V1.csv', index_col=0, nrows = 5000) 
 #keep the index column as that is what the ss_rows corresponds to: 
 
 # TEMPORARY: ADD THE MEAN AND STD DEV IF I DON"T ALREADY HAVE THAT     
-mean = ndvi_res.iloc[:, 4:].mean(axis = 1) #skip the info columns
-stdev = ndvi_res.iloc[:, 4:].std(axis = 1)
-ndvi_res = pd.concat([ndvi_res, mean.rename('mean'), stdev.rename('stdev')], axis = 1)
+# mean = ndvi_res.iloc[:, 4:].mean(axis = 1) #skip the info columns
+# stdev = ndvi_res.iloc[:, 4:].std(axis = 1)
+# ndvi_res = pd.concat([ndvi_res, mean.rename('mean'), stdev.rename('stdev')], axis = 1)
 
 #TEMPORARY FOR NROWS LIMIT
-ss_cols = ss_cols[ss_rows < 5000]
-ss_rows = ss_rows[ss_rows < 5000]
+# ss_cols = ss_cols[ss_rows < 5000]
+# ss_rows = ss_rows[ss_rows < 5000]
 
 
 #### Calculate the recovery rates based on NDMA drought classification dates #####################
@@ -62,18 +62,23 @@ recov_stop = recovery_idx+6 #look up to 6 months ahead to account for delay in v
 #extending this makes it too hard to find the right local min
 recov_stop[recov_stop > 119] = 119 #in case there's any that are close to the end 
 
+# r59 =  ndvi_df.iloc[:, (59-5):(59+6)]
+# print('% pix missing for r59: ', r59.isna().sum().sum() / (r59.size))
+# r77 =  ndvi_df.iloc[:, (77-5):(77+6)]
+
+'''
 #Make an array with columns that show which ss pairs/rows are valid for each of the recovery periods 
 ss_overlap = np.empty((len(ss_rows), n_recovs))
 for x in range(n_recovs):
    ss_overlap[:, x] = (ss_cols[:, 0]<= recov_start[x]) & (ss_cols[:,1] >= recov_stop[x]) #Boolean 
 ss_overlap = ss_overlap.astype('bool')
-
+'''
 ####### Calculate the recovery rates for each designated recovery period ############################
 
 # initialize a df for results 
 ndvi_results = ndvi_res.copy()
 ndvi_results.iloc[:,4:-2] = np.nan #keep the mean and stdev 
-ndvi_results.drop(columns='empty', inplace= True)
+#ndvi_results.drop(columns='empty', inplace= True)
 hlist1 = ['recov_rate_'+str(h) for h in recovery_idx]
 hlist2 = ['rsq_'+str(h) for h in recovery_idx]
 #keep the local mins for later analysis
@@ -87,7 +92,12 @@ a_guess, b_guess, c_guess = -0.05, -0.2, .05  #Somewhat optimized with testing
 
 for z in range(n_recovs): #Z goes through the recoveries 
     print('starting recovery calculation for recovery number '+str(z))
+    '''
     valid_rows = ss_rows[ss_overlap[:,z]]#these are the rows to look at for the first recovery period 
+    n_valid_rows = len(valid_rows)
+    '''
+    #grab any rows that have at least 6 observations in the recovery window 
+    valid_rows = ndvi_res[ndvi_res.iloc[:, recov_start[z]+4:recov_stop[z]+5].count(axis=1) >=6 ].index
     n_valid_rows = len(valid_rows)
 
     # Grab the slices of the ndvi that we care about 
@@ -111,7 +121,7 @@ for z in range(n_recovs): #Z goes through the recoveries
 
     for n in range(n_valid_rows): # N is going through the number of valid rows 
         row = valid_slices.iloc[n, :] #Have to use iloc because loc has the original index 
-        local_min = row.values.argmin()
+        local_min = row.argmin(skipna = True)
         min_val = row[local_min] 
 
         #check that the mean is at least 1 std dev from the mean 
@@ -124,15 +134,16 @@ for z in range(n_recovs): #Z goes through the recoveries
             # and to deal with any recoveries that are very high pos residuals 
             #need to have at least 3 of the orig pts to get anything - if not it will error out 
             #but have to have a check here so it doesn't get covered up by adding 12 means afterwards
-            if len(sample) >=3: 
+            #if len(sample) >=3: 
+            if sample.count() >=3: #require at least 3 real data points incl the min to fit 
                 temp[:] = valid_means.iloc[n] #iloc good
                 sample = pd.concat([sample, pd.Series(temp)]) 
             
-            x = range(sample.size) #make fake time data for this sample 
+            x = np.array(range(sample.size)) #make fake time data for this sample - can't just be a range for the curve_fit
 
             try:
                 popt, pcov = curve_fit(lambda t, a, b, c: a*np.exp(b*t)+c, x, sample, 
-                                p0=(a_guess, b_guess, c_guess))
+                                p0=(a_guess, b_guess, c_guess), nan_policy= 'omit') #ignrores nan values i think
                 # note that have to remove any values of sample that are zero along with corresponding x -- see if that's an issue 
 
                 a = popt[0]
@@ -145,10 +156,10 @@ for z in range(n_recovs): #Z goes through the recoveries
                 #PLOTTING FOR TESTING
                 # plt.plot(x, sample, 'r*')
                 # plt.plot(x, y_curvefitted, 'b-')
-                # std1 = valid_means.iloc[n] - valid_stdevs.iloc[n]
-                # std2 = valid_means.iloc[n] - 2* valid_stdevs.iloc[n]
-                # plt.plot([0, 1, 2, 3, 4,5], [std1, std1,std1,std1,std1,std1 ], 'y-')
-                # plt.plot([0, 1, 2, 3, 4,5], [std2, std2,std2,std2,std2,std2 ], 'g-')
+                # # std1 = valid_means.iloc[n] - valid_stdevs.iloc[n]
+                # # std2 = valid_means.iloc[n] - 2* valid_stdevs.iloc[n]
+                # # plt.plot([0, 1, 2, 3, 4,5], [std1, std1,std1,std1,std1,std1 ], 'y-')
+                # # plt.plot([0, 1, 2, 3, 4,5], [std2, std2,std2,std2,std2,std2 ], 'g-')
                 # plt.show()
 
                 #Calculate the residual between the fitted curve and data, ignoring the final 'fake' data
@@ -166,7 +177,7 @@ for z in range(n_recovs): #Z goes through the recoveries
                     raise Exception('nonsensical model')
                 
             except Exception as e: 
-                # print(e)
+                print(e)
                 # if you can't calculate for some reason set to 10 (nan signifies empty/not attempted)
                 #could be not enough data/min at the end of the sample 
                 r= 10
@@ -195,6 +206,6 @@ for z in range(n_recovs): #Z goes through the recoveries
 ndvi_results.dropna(axis=0, thresh=8, inplace=True, ignore_index=False) #drop any rows that don't have at least 8 non empty cells (4 for the labels and 4+ results)
 # keep the index labels- MUST USE LOC FROM HERE ON OUT 
 #Save to a csv 
-ndvi_results.to_csv('ndvi_results_'+county+'TESTING_add_min_condition.csv', encoding='utf-8', index=True)
+ndvi_results.to_csv('ndvi_results_'+county+'TESTING_V1.csv', encoding='utf-8', index=True)
 
 print('donezo')

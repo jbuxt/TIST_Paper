@@ -25,19 +25,20 @@ import pickle
 # county = input('Input the county to process: ')
 county = 'Tharaka'
 
-ndvi_df = pd.read_csv('./intermediate_landsat/ndvi_pixels_'+county+'.csv') #TEMP for testing , nrows =1000
+ndvi_df = pd.read_csv('./intermediate_landsat/ndvi_pixels_'+county+'.csv', nrows =5000) #TEMP for testing 
+
 ## Summary stats on the ndvi 
-print('total % pix missing: ', ndvi_df.isna().sum().sum() / (120*ndvi_df.shape[0])) #for all pix
+# print('total % pix missing: ', ndvi_df.isna().sum().sum() / (120*ndvi_df.shape[0])) #for all pix
 
 #grab the slices that would matter for the tharaka recov periods
-r59 =  ndvi_df.iloc[:, (59-5):(59+6)]
-print('% pix missing for r59: ', r59.isna().sum().sum() / (r59.size))
-r77 =  ndvi_df.iloc[:, (77-5):(77+6)]
-print('% pix missing for r77: ', r77.isna().sum().sum() / (r59.size))
-r59.dropna(axis=0, thresh=9, inplace=True, ignore_index=False)
-print('% rows with more than 9 mo: ', r59.shape[0] )
-r77.dropna(axis=0, thresh=9, inplace=True, ignore_index=False)
-print('% rows with more than 9 mo: ', r77.shape[0])  
+# r59 =  ndvi_df.iloc[:, (59-5):(59+6)]
+# print('% pix missing for r59: ', r59.isna().sum().sum() / (r59.size))
+# r77 =  ndvi_df.iloc[:, (77-5):(77+6)]
+# print('% pix missing for r77: ', r77.isna().sum().sum() / (r77.size))
+# r59.dropna(axis=0, thresh=6, inplace=True, ignore_index=False)
+# print('% rows with more than 6 mo r59: ', r59.shape[0] )
+# r77.dropna(axis=0, thresh=6, inplace=True, ignore_index=False)
+# print('% rows with more than 6 mo r77: ', r77.shape[0])  
 
 nrows, dum = ndvi_df.shape
 dates = pd.date_range(start='5/1/2013', periods=120, freq='MS')
@@ -119,31 +120,32 @@ for i in smoothed_ndvi_df.index:
     decomp = stl.robust_stl(ndvi_array[i, :], period = 12, smooth_length = 21)
     ndvi_res.iloc[i, 4:] = decomp.resid
 
-    decomp.plot()
-    plt.xticks(rotation=90)
-    plt.show()
+    # decomp.plot()
+    # plt.xticks(rotation=90)
+    # plt.show()
 
 ###### Now remove all the values that were originally nan 
-ndvi_res.mask(empty_mask, 0, inplace=True)
+ndvi_res.mask(empty_mask, np.nan, inplace=True)
 
+#find the mean and std dev of the residuals after decomposing 
+mean = ndvi_res.iloc[:, 4:].mean(axis = 1)
+stdev = ndvi_res.iloc[:, 4:].std(axis = 1)
+ndvi_res = pd.concat([ndvi_res, mean.rename('mean'), stdev.rename('stdev')], axis = 1)
 
 '''
-#find the mean and std dev of the residuals after decomposing 
-mean = smoothed_ndvi_df.mean(axis = 1)
-stdev = smoothed_ndvi_df.std(axis = 1)
-smoothed_ndvi_df = pd.concat([smoothed_ndvi_df, mean.rename('mean'), stdev.rename('stdev')], axis = 1)
 #copy over the rows and columns etc
 smoothed_ndvi_df = pd.concat([ndvi_df[['row','col','tist', 'county']], smoothed_ndvi_df], axis = 1)
 
 #get the rows and cols of array that the ss is referring to once ndvi is reshaped 
 ss_cols = ss % 121 #this now more closely aligns with the date 
 ss_rows = np.floor(ss[:,0] / 121) #gives the row of the dataframe that it corresponds to 
-
+'''
 #do NOT delete rows without enough data yet- makes it annoying to deal with loc instead of iloc 
 
 #Save to CSV - writes indices to col 0
-smoothed_ndvi_df.to_csv('ndvi_residuals_'+county+'.csv', encoding='utf-8', index=True)
+ndvi_res.to_csv('ndvi_residuals_'+county+'_V1.csv', encoding='utf-8', index=True)
 
+'''
 #Save the ss !!
 with open(county+'_ss.pkl', 'wb') as file:
     # A new file will be created
