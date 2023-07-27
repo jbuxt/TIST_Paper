@@ -18,7 +18,7 @@ with open('veg_meta.pkl', 'rb') as file:
     ndvi_meta, ndvi_bound =pickle.load(file)
 
 county = input('Input the county to process: ')
-ndvi = pd.read_csv('./intermediate_landsat/ndvi_pixels_'+county+'.csv') #TEMP for testing , nrows=10000
+ndvi = pd.read_csv('ndvi_pixels_'+county+'.csv') #TEMP for testing , nrows=10000
 # Calculate the number of missing 
 ndvi['Pct_Missing']=ndvi.isna().sum(axis= 1).divide(120)
 ndvi[['Longest_Missing_Streak','StartDate_Longest_Missing']] = ndvi.apply(longest_nan, axis=1, result_type='expand')
