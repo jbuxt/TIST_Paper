@@ -2,7 +2,7 @@
 # takes df with pixel locations, county, tist, etc and additional columns 
 # for values that should be put back in maps 
 # put names of columns you want mapped in a list 
-#future -  convert to raster file for plotting in GIS 
+# WARNING: removes things that are actually == 0 and sets to nan, be careful if using for ints and not floats
 
 import numpy as np 
 from scipy.sparse import coo_matrix 
@@ -21,9 +21,13 @@ def df_to_map(df, col_names, rows=6871, cols=8786, savefile=False, fname='output
     for x in range(n_layers):
         vals = col_names[x]
         s_img = coo_matrix((df[vals], (df.row, df.col)), shape = (rows, cols))
-        img = s_img.todense()
+
+        img = s_img.todense().astype("float32")
+        img[img == 0] = np.nan #remove the zeros that are put in with the sparse matrix 
+        # RISK: anything that's actually equal to zero is going to be removed. But of the things i'm making, 
+        # I don't think anything is actually going to be exactly zero. 
         array[:,:, x] = img
-        #yhis fills with 0s -- how to not??
+
         
     
     if savefile:
