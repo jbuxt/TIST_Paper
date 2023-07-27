@@ -23,7 +23,7 @@ ndvi = pd.read_csv('ndvi_pixels_'+county+'.csv') #TEMP for testing , nrows=10000
 ndvi['Pct_Missing']=ndvi.isna().sum(axis= 1).divide(120)
 ndvi[['Longest_Missing_Streak','StartDate_Longest_Missing']] = ndvi.apply(longest_nan, axis=1, result_type='expand')
 
-img = df_to_map(ndvi, ['N_Missing', 'Longest_Missing_Streak'], savefile=True, 
+img = df_to_map(ndvi, ['Pct_Missing', 'Longest_Missing_Streak'], savefile=True, 
                 fname='ndvi_missing_'+county+'.tif', meta=ndvi_meta)
 
 
