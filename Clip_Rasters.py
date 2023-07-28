@@ -71,24 +71,23 @@ with open('veg_meta.pkl', 'rb') as file:
 #     pickle.dump(TIST_mask, file)
 
 ############################################################################
-eco = gp.read_file('tpath') 
+eco = gp.read_file('eco_shp/eco_shp.shp') 
 
 eco_mask = features.rasterize(
-    ## The numbers in mask correspond to counties as follows
-    ## 0 = no county
-    ## 1 = Laikipia (14) 
-    ## 2 = Meru (16)
-    ## 3 = Tharaka (22) 
-    ## 4 = Nyeri (25)
-    ## 5 = Embu (29)
-
-             [(eco.loc[0, 'geometry'], 1), (eco.loc[1, 'geometry'], 2),
-               (eco.loc[2, 'geometry'], 3), (eco.loc[3, 'geometry'], 4),
-               (eco.loc[5, 'geometry'], 5)],
+    ## The numbers in mask correspond to ecoregions as follows
+    ## 57 = Southern Acacia-Commiphora bushlands and thickets
+    ## 51 =  Northern Acacia-Commiphora bushlands and thickets
+    ## 78 = East African montane moorlands
+    ## 8 =  East African montane forests
+            zip(eco['geometry'], eco['label']),
             out_shape=[int(veg_meta['height']), int(veg_meta['width'])],
             transform=veg_meta['transform'],
             all_touched = True)
 
 plt.imshow(eco_mask)
 plt.show()
+
+with open ('eco_mask.pkl', 'wb') as file:
+    pickle.dump(eco_mask, file)
+
 print('done')
