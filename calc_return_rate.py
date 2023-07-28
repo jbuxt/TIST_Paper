@@ -15,17 +15,15 @@ import pickle
 import matplotlib.pyplot as plt
 from scipy.optimize import curve_fit
 
-# county = input('Input the county to process: ')
-county = 'Tharaka'
+county = input('Input the county to process: ')
+# county = 'Tharaka'
 n_obvs = 9 #number of vals out of 12 to accept for recovery calculation 
 
 # with open('./intermediate_landsat/'+county+'_ss.pkl', 'rb') as file:
 #    ss, ss_rows, ss_cols= pickle.load(file)
 # ss_rows = ss_rows.astype('int')
    
-#CHGNE TO BE FROM INTERMEDIATE FOLDER IF NECESSARY
-#ADD INDX COL = 0 BACK IN BEFORE DOING ON SERVER
-ndvi_res  = pd.read_csv('ndvi_residuals_'+county+'_V2.csv', index_col=0, nrows = 5000) 
+ndvi_res  = pd.read_csv('ndvi_residuals_'+county+'_V2.csv', index_col=0) 
 #keep the index column as that is what the ss_rows corresponds to: 
 
 
@@ -204,6 +202,6 @@ for z in range(n_recovs): #Z goes through the recoveries
 ndvi_results.dropna(axis=0, thresh=8, inplace=True, ignore_index=False) #drop any rows that don't have at least 8 non empty cells (4 for the labels and 4+ results)
 # keep the index labels- MUST USE LOC FROM HERE ON OUT 
 #Save to a csv 
-ndvi_results.to_csv('ndvi_results_'+county+'TESTING_V2.csv', encoding='utf-8', index=True)
+ndvi_results.to_csv('ndvi_results_'+county+'_V2.csv', encoding='utf-8', index=True)
 
 print('donezo')

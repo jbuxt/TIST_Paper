@@ -22,10 +22,10 @@ import pickle
 
 
 # Load the veg data #############################################
-# county = input('Input the county to process: ')
-county = 'Tharaka'
+county = input('Input the county to process: ')
+# county = 'Tharaka'
 
-ndvi_df = pd.read_csv('./intermediate_landsat/ndvi_pixels_'+county+'.csv', nrows=5000) #TEMP for testing 
+ndvi_df = pd.read_csv('ndvi_pixels_'+county+'.csv') #TEMP for testing nrows
 
 ## Summary stats on the ndvi 
 # print('total % pix missing: ', ndvi_df.isna().sum().sum() / (120*ndvi_df.shape[0])) #for all pix
@@ -38,6 +38,8 @@ avgs = pd.DataFrame(columns = range(1,13))
 for m in range(1,13):
      mo = '-'+str(m).zfill(2)
      avgs.loc[:, m] = ndvi_df.filter(like=mo, axis=1).mean(axis = 1) #mean through each row across col 
+#this is a stupid way to do it but i don't care
+#make 10 years worth from May 2013 through APril 2023
 all_avg = pd.concat([avgs.loc[:, 5:], avgs, avgs, avgs, avgs, avgs, avgs, avgs, avgs, avgs, avgs.loc[:, :4]], axis = 1)
 all_avg = pd.concat([ndvi_df[['row','col','tist', 'county']], all_avg], axis = 1)
 all_avg.columns = ndvi_df.columns
