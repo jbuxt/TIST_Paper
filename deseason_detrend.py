@@ -25,30 +25,15 @@ import pickle
 # county = input('Input the county to process: ')
 county = 'Tharaka'
 
-ndvi_df = pd.read_csv('./intermediate_landsat/ndvi_pixels_'+county+'.csv', nrows =5000) #TEMP for testing 
+ndvi_df = pd.read_csv('./intermediate_landsat/ndvi_pixels_'+county+'.csv', nrows=5000) #TEMP for testing 
 
 ## Summary stats on the ndvi 
 # print('total % pix missing: ', ndvi_df.isna().sum().sum() / (120*ndvi_df.shape[0])) #for all pix
 
-#grab the slices that would matter for the tharaka recov periods
-# r59 =  ndvi_df.iloc[:, (59-5):(59+6)]
-# print('% pix missing for r59: ', r59.isna().sum().sum() / (r59.size))
-# r77 =  ndvi_df.iloc[:, (77-5):(77+6)]
-# print('% pix missing for r77: ', r77.isna().sum().sum() / (r77.size))
-# r59.dropna(axis=0, thresh=6, inplace=True, ignore_index=False)
-# print('% rows with more than 6 mo r59: ', r59.shape[0] )
-# r77.dropna(axis=0, thresh=6, inplace=True, ignore_index=False)
-# print('% rows with more than 6 mo r77: ', r77.shape[0])  
-
 nrows, dum = ndvi_df.shape
 dates = pd.date_range(start='5/1/2013', periods=120, freq='MS')
 
-# V0
-#interpolate up to 2 missing points since a season is usually 3 months
-# will lose about 20% ? of pixels this way 
-# smoothed_ndvi_df = ndvi_df.iloc[:, 4:].astype("float32").interpolate(method='linear', limit=2, axis = 1, limit_area='inside')
-
-#V1 - find avg of months per pixel 
+#V1/V2 - find avg of months per pixel (only on orig data) 
 avgs = pd.DataFrame(columns = range(1,13))
 for m in range(1,13):
      mo = '-'+str(m).zfill(2)
@@ -57,20 +42,41 @@ all_avg = pd.concat([avgs.loc[:, 5:], avgs, avgs, avgs, avgs, avgs, avgs, avgs, 
 all_avg = pd.concat([ndvi_df[['row','col','tist', 'county']], all_avg], axis = 1)
 all_avg.columns = ndvi_df.columns
 
-# Save a mask of the empty months for later
+# V0 / V2
+#interpolate up to 2 /1 missing points since a season is usually 3 months
+ndvi_df.iloc[:, 4:].astype("float32").interpolate(method='linear', limit=1, axis = 1, limit_area='inside',  inplace= True)
+# smoothed_ndvi_df = pd.concat([ndvi_df[['row','col','tist', 'county']], smoothed_ndvi_df], axis = 1)
+
+#grab the slices that would matter for the tharaka recov periods oto get an estimate 
+# r59 =  smoothed_ndvi_df.iloc[:, (59-5+4):(59+6+4)] #account for the 4 intro cols 
+# print('% pix missing for r59: ', r59.isna().sum().sum() / (r59.size))
+# r77 =  smoothed_ndvi_df.iloc[:, (77-5+4):(77+6+4)]
+# print('% pix missing for r77: ', r77.isna().sum().sum() / (r77.size))
+# r59.dropna(axis=0, thresh=9, inplace=True, ignore_index=False)
+# print('% rows with more than 9 mo r59: ', r59.shape[0] )
+# r77.dropna(axis=0, thresh=9, inplace=True, ignore_index=False)
+# print('% rows with more than 9 mo r77: ', r77.shape[0])  
+
+# Save a mask of the empty months for later AFTER the filling of 1 month
 empty_mask =  ndvi_df.isna() #nan = true, not nan = false
+# empty_orig_mask = ndvi_df.isna()
 
 #Now fill the empty pix with the average established for that month for that pixel 
-smoothed_ndvi_df = ndvi_df.mask(empty_mask, all_avg) #mask replaces values that are True (nan)
-
+ndvi_df.mask(empty_mask, all_avg, inplace= True) #mask replaces values that are True (nan)
+# only_filled = ndvi_df.mask(empty_orig_mask, all_avg)
 ### Get an example plot################
-# plt.plot(dates, smoothed_ndvi_df.iloc[55, 4:], 'b-', label='filled')
-# plt.plot(dates, ndvi_df.iloc[55, 4:], 'go', label='original')
-# plt.title('Example: replaced missing months with pixel average for that month')
+# plt.plot(dates, smoothed_ndvi_df.iloc[3000, 4:], 'r*', label='interpolated 1 month')
+# plt.plot(dates, ndvi_df.iloc[3000, 4:], 'go', label='original')
+# plt.plot(dates, filled.iloc[3000, 4:], 'b-', label='interpolated and filled with avgs')
+# plt.plot(dates, only_filled.iloc[3000, 4:], 'c--', label = 'no interpolation, only filled with avgs')
+# plt.title('Example: gap filling and temporary filling with averages')
 # plt.xlabel('date')
 # plt.ylabel('NDVI')
 # plt.legend()
 # plt.show()
+
+ndvi_res = ndvi_df.copy()
+ndvi_res.iloc[:, 4:] = 0
 
 '''
 #add a nan column to the end after interpolation so that it always splits on that 
@@ -111,12 +117,9 @@ for start, stop in ss:
     
 smoothed_ndvi_df.loc[:,:] = ndvi_res_flat.reshape(nrows, 121)
 '''
-ndvi_res = ndvi_df.copy()
-ndvi_res.iloc[:, 4:] = 0
+ndvi_array = np.array(ndvi_df.iloc[:, 4:].astype('float32'))
 
-ndvi_array = np.array(smoothed_ndvi_df.iloc[:, 4:].astype('float32'))
-
-for i in smoothed_ndvi_df.index:
+for i in ndvi_res.index:
     decomp = stl.robust_stl(ndvi_array[i, :], period = 12, smooth_length = 21)
     ndvi_res.iloc[i, 4:] = decomp.resid
 
@@ -124,7 +127,7 @@ for i in smoothed_ndvi_df.index:
     # plt.xticks(rotation=90)
     # plt.show()
 
-###### Now remove all the values that were originally nan 
+###### Now remove the values that were originally nan and not interpolated
 ndvi_res.mask(empty_mask, np.nan, inplace=True)
 
 #find the mean and std dev of the residuals after decomposing 
@@ -143,7 +146,7 @@ ss_rows = np.floor(ss[:,0] / 121) #gives the row of the dataframe that it corres
 #do NOT delete rows without enough data yet- makes it annoying to deal with loc instead of iloc 
 
 #Save to CSV - writes indices to col 0
-ndvi_res.to_csv('ndvi_residuals_'+county+'_V1.csv', encoding='utf-8', index=True)
+ndvi_res.to_csv('ndvi_residuals_'+county+'_V2.csv', encoding='utf-8', index=True)
 
 '''
 #Save the ss !!

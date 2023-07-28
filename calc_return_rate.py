@@ -1,7 +1,6 @@
 # Calculate the recovery rate for pixels at specified times according to the NDMA classifications 
 # Inputs: df of ndvi residuals 
-#       start/stop indexes for the continuous sections of cleaned data
-#       NDMA csv if graphing wanted 
+#       OLD: start/stop indexes for the continuous sections of cleaned data
 # Outputs: df of ndvi results saved to csv
 #           results are: recovery rate and Rsq and fitted values 
 #                       for each recovery time period for all available data 
@@ -18,6 +17,7 @@ from scipy.optimize import curve_fit
 
 # county = input('Input the county to process: ')
 county = 'Tharaka'
+n_obvs = 9 #number of vals out of 12 to accept for recovery calculation 
 
 # with open('./intermediate_landsat/'+county+'_ss.pkl', 'rb') as file:
 #    ss, ss_rows, ss_cols= pickle.load(file)
@@ -25,13 +25,9 @@ county = 'Tharaka'
    
 #CHGNE TO BE FROM INTERMEDIATE FOLDER IF NECESSARY
 #ADD INDX COL = 0 BACK IN BEFORE DOING ON SERVER
-ndvi_res  = pd.read_csv('ndvi_residuals_'+county+'_V1.csv', index_col=0, nrows = 5000) 
+ndvi_res  = pd.read_csv('ndvi_residuals_'+county+'_V2.csv', index_col=0, nrows = 5000) 
 #keep the index column as that is what the ss_rows corresponds to: 
 
-# TEMPORARY: ADD THE MEAN AND STD DEV IF I DON"T ALREADY HAVE THAT     
-# mean = ndvi_res.iloc[:, 4:].mean(axis = 1) #skip the info columns
-# stdev = ndvi_res.iloc[:, 4:].std(axis = 1)
-# ndvi_res = pd.concat([ndvi_res, mean.rename('mean'), stdev.rename('stdev')], axis = 1)
 
 #TEMPORARY FOR NROWS LIMIT
 # ss_cols = ss_cols[ss_rows < 5000]
@@ -96,13 +92,14 @@ for z in range(n_recovs): #Z goes through the recoveries
     valid_rows = ss_rows[ss_overlap[:,z]]#these are the rows to look at for the first recovery period 
     n_valid_rows = len(valid_rows)
     '''
-    #grab any rows that have at least 6 observations in the recovery window 
-    valid_rows = ndvi_res[ndvi_res.iloc[:, recov_start[z]+4:recov_stop[z]+5].count(axis=1) >=6 ].index
+    #grab any rows that have at least n_obvs observations in the recovery window 
+    # +4 because there are 4 extra columns at the front end of the df
+    # and +5 because want the recovery stop to be inclusive  
+    valid_rows = ndvi_res[ndvi_res.iloc[:, recov_start[z]+4:recov_stop[z]+5].count(axis=1) >= n_obvs].index
     n_valid_rows = len(valid_rows)
 
     # Grab the slices of the ndvi that we care about 
-    valid_slices = ndvi_res.iloc[valid_rows, recov_start[z]+4:recov_stop[z]+5] # +4 because there are 4 extra columns at the front end of the df
-    # and +5 because want the recovery stop to be inclusive  
+    valid_slices = ndvi_res.iloc[valid_rows, recov_start[z]+4:recov_stop[z]+5] 
     
     #get the means/stdevs for those rows (can use loc and iloc interchangeably still because no deleted rows yet)
     valid_means = ndvi_res.loc[valid_rows, 'mean']
@@ -133,6 +130,7 @@ for z in range(n_recovs): #Z goes through the recoveries
             # concat the mean of the residuals to the end of the sample to make sure it recovers to the 'normal' state
             # and to deal with any recoveries that are very high pos residuals 
             #need to have at least 3 of the orig pts to get anything - if not it will error out 
+            #(THis could be changed if I did a diff fitting method - using the default scipy curvefit option rn)
             #but have to have a check here so it doesn't get covered up by adding 12 means afterwards
             #if len(sample) >=3: 
             if sample.count() >=3: #require at least 3 real data points incl the min to fit 
@@ -143,8 +141,8 @@ for z in range(n_recovs): #Z goes through the recoveries
 
             try:
                 popt, pcov = curve_fit(lambda t, a, b, c: a*np.exp(b*t)+c, x, sample, 
-                                p0=(a_guess, b_guess, c_guess), nan_policy= 'omit') #ignrores nan values i think
-                # note that have to remove any values of sample that are zero along with corresponding x -- see if that's an issue 
+                                p0=(a_guess, b_guess, c_guess), nan_policy= 'omit') #ignores nan values
+
 
                 a = popt[0]
                 r = popt[1] #recovery rate
@@ -206,6 +204,6 @@ for z in range(n_recovs): #Z goes through the recoveries
 ndvi_results.dropna(axis=0, thresh=8, inplace=True, ignore_index=False) #drop any rows that don't have at least 8 non empty cells (4 for the labels and 4+ results)
 # keep the index labels- MUST USE LOC FROM HERE ON OUT 
 #Save to a csv 
-ndvi_results.to_csv('ndvi_results_'+county+'TESTING_V1.csv', encoding='utf-8', index=True)
+ndvi_results.to_csv('ndvi_results_'+county+'TESTING_V2.csv', encoding='utf-8', index=True)
 
 print('donezo')

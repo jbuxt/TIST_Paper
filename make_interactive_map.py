@@ -104,6 +104,7 @@ with rs.open('RESULTS/ndvi_missing_Meru.tif') as im:
 scaled_meru0 = np.round(((meru[0,:,:] - 0) * (1/(meru[0,:,:].max() - 0) * 255)), 0).astype('uint8')
 scaled_meru1 = np.round(((meru[1,:,:] - 0) * (1/(meru[1,:,:].max() - 0) * 255)),0).astype('uint8')
 
+#DOESN"T WORK - try doing the colormap on the array now?? 
 f.raster_layers.ImageOverlay(scaled_meru1,
                   bounds=t_bounds, #[[lat_min, lon_min], [lat_max, lon_max]]
                   colormap = mpl.colormaps['Purples'], #can't call colormap on the array here, also doesn't like colored data in the first part 
