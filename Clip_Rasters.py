@@ -10,27 +10,70 @@ import pickle
 #import numpy.ma as ma 
 
 
-with open('relevant_tist.pkl', 'rb') as file:
-    TIST = pickle.load(file)
+# with open('relevant_tist.pkl', 'rb') as file:
+#     TIST = pickle.load(file)
 
-with open('relevant_counties.pkl', 'rb') as file:
-    counties = pickle.load(file)
+# with open('relevant_counties.pkl', 'rb') as file:
+#     counties = pickle.load(file)
 
 with open('veg_meta.pkl', 'rb') as file:
     veg_meta, veg_bound = pickle.load(file)
 
-#####################################################
-# Make an outline of the entire study area 
-# counties['roi_col'] = 1
-# roi = counties.dissolve(by='roi_col')
+# #####################################################
+# # Make an outline of the entire study area 
+# # counties['roi_col'] = 1
+# # roi = counties.dissolve(by='roi_col')
 
 
-# counties.plot()
-# roi.plot()
+# # counties.plot()
+# # roi.plot()
+# # plt.show()
+# ######################################################
+# # Create an np array mask of the counties 
+# county_mask = features.rasterize(
+#     ## The numbers in mask correspond to counties as follows
+#     ## 0 = no county
+#     ## 1 = Laikipia (14) 
+#     ## 2 = Meru (16)
+#     ## 3 = Tharaka (22) 
+#     ## 4 = Nyeri (25)
+#     ## 5 = Embu (29)
+
+#              [(counties.loc[0, 'geometry'], 1), (counties.loc[1, 'geometry'], 2),
+#                (counties.loc[2, 'geometry'], 3), (counties.loc[3, 'geometry'], 4),
+#                (counties.loc[5, 'geometry'], 5)],
+#             out_shape=[int(veg_meta['height']), int(veg_meta['width'])],
+#             transform=veg_meta['transform'],
+#             all_touched = True)
+
+# plt.imshow(county_mask)
 # plt.show()
-######################################################
-# Create an np array mask of the counties 
-county_mask = features.rasterize(
+# # rows = 6871 #in total picture
+# # cols = 8786
+# with open ('county_mask.pkl', 'wb') as file:
+#     pickle.dump(county_mask, file)
+
+# TIST_mask = features.rasterize(
+#     ## make a mask of all pixels in TIST groves
+#             TIST.geometry,
+#             out_shape=[veg_meta['height'], veg_meta['width']],
+#             transform=veg_meta['transform'],
+#             all_touched = True)
+# plt.imshow(TIST_mask)
+# plt.show()
+
+## Get rid of precip values outside the counties of interest 
+# outside = ma.make_mask(county_mask)
+# tist_not = ma.make_mask(TIST_mask)
+# precip = precip * tist_not
+
+# with open ('TIST_mask.pkl', 'wb') as file:
+#     pickle.dump(TIST_mask, file)
+
+############################################################################
+eco = gp.read_file('tpath') 
+
+eco_mask = features.rasterize(
     ## The numbers in mask correspond to counties as follows
     ## 0 = no county
     ## 1 = Laikipia (14) 
@@ -39,35 +82,13 @@ county_mask = features.rasterize(
     ## 4 = Nyeri (25)
     ## 5 = Embu (29)
 
-             [(counties.loc[0, 'geometry'], 1), (counties.loc[1, 'geometry'], 2),
-               (counties.loc[2, 'geometry'], 3), (counties.loc[3, 'geometry'], 4),
-               (counties.loc[5, 'geometry'], 5)],
+             [(eco.loc[0, 'geometry'], 1), (eco.loc[1, 'geometry'], 2),
+               (eco.loc[2, 'geometry'], 3), (eco.loc[3, 'geometry'], 4),
+               (eco.loc[5, 'geometry'], 5)],
             out_shape=[int(veg_meta['height']), int(veg_meta['width'])],
             transform=veg_meta['transform'],
             all_touched = True)
 
-plt.imshow(county_mask)
+plt.imshow(eco_mask)
 plt.show()
-# rows = 6871 #in total picture
-# cols = 8786
-with open ('county_mask.pkl', 'wb') as file:
-    pickle.dump(county_mask, file)
-
-TIST_mask = features.rasterize(
-    ## make a mask of all pixels in TIST groves
-            TIST.geometry,
-            out_shape=[veg_meta['height'], veg_meta['width']],
-            transform=veg_meta['transform'],
-            all_touched = True)
-plt.imshow(TIST_mask)
-plt.show()
-
-## Get rid of precip values outside the counties of interest 
-# outside = ma.make_mask(county_mask)
-# tist_not = ma.make_mask(TIST_mask)
-# precip = precip * tist_not
-
-with open ('TIST_mask.pkl', 'wb') as file:
-    pickle.dump(TIST_mask, file)
-
 print('done')
