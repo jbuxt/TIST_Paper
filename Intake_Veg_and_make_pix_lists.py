@@ -148,7 +148,7 @@ im_count = 0
 
 for y in range(start_yr, end_yr+1):
     for m in range(1, 13):
-        if ((y == 2015) and (m < 7)) or ((y == 2023) and (m > 6)):
+        if ((y == 2013) and (m < 5)) or ((y == 2023) and (m > 4)):
             pass #don't have those times 
         else:
             im_count += 1
