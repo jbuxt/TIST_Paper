@@ -6,7 +6,7 @@
 /GEE_Precip 
 /GEE_Veg_new
 visuals/
-eco_shp/
+*_shp/
 relevant_counties*/
 relevant_tist*/
 visuals*/

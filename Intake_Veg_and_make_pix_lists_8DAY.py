@@ -46,20 +46,24 @@ with open('county_mask.pkl', 'rb') as file:
     ## 5 = Embu
 with open('tist_mask.pkl', 'rb') as file:
     tist_mask = pickle.load(file)
-#IMPORT ECOREGIONS AND LANDCOVER MASK -- not used until later rn 
-#landcover_mask
-# with open('landcover_mask.pkl', 'rb') as file:
-#     landcover_mask = pickle.load(file)
-# #ecoregion_mask
-# with open('ecoregion_mask.pkl', 'rb') as file:
-#     ecoregion_mask = pickle.load(file)
+
+# landcover_mask
+with open('landcover_mask.pkl', 'rb') as file:
+    landcover_mask = pickle.load(file)
+#ecoregion_mask
+with open('eco_mask.pkl', 'rb') as file:
+    ecoregion_mask = pickle.load(file)
 
 # Get lists of where each county is by index AND where landcover <= 40 
 #only keeping grassland, shrubland, cropland, and forest
 #not sure if this works or need to do in 2 steps 
-county_idx = np.argwhere(county_mask == county_int) #and (landcover_mask <= 40))
+#county_idx = np.argwhere(county_mask == county_int) #and (landcover_mask <= 40))
+lc_in_county = landcover_mask*(county_mask == county_int)
+lc_in_county_40 = lc_in_county*(lc_in_county<=40) #get only the landcover types we care about 
+final_idx = np.argwhere(lc_in_county_40 != 0) #index of pixels with lc <=40 in the specified county
 
-del county_mask #save space
+
+del county_mask, lc_in_county_40, lc_in_county#save space
 
 
 #################################################
@@ -86,7 +90,7 @@ end_yr = 2023
 # n_ROI = 30104272 #all counties - CHANGE 
 n_8days = 46*10 #CHANGE THIS _ WILL BE LESS 
 
-n_county, dummy = np.shape(county_idx)
+n_county, dummy = np.shape(final_idx)
 
 # date_list = pd.date_range(start='5/1/2013', periods=n_months, freq='MS') 
 col_names = ['row','col', 'tist', 'county']
@@ -121,7 +125,7 @@ for y in range(start_yr, end_yr+1):
     for i in range(rows): #TEMPORARY for tiny tif
         for j in range(cols):
     #for p in range(n_county): # number pixels in this county 
-            # i, j = county_idx[p] #TEMPORARY
+            # i, j = final_idx[p] #TEMPORARY
                 
             if im_count == 1: #this is the first image
                 #initialize the row with row, col, county, tist, and first timestep 
@@ -129,8 +133,8 @@ for y in range(start_yr, end_yr+1):
                 ndvi_df.loc[p, 'col'] = int(j)
                 ndvi_df.loc[p, 'county'] = int(county_int)
                 ndvi_df.loc[p, 'tist'] = int(tist_mask[i, j])
-                # ndvi_df.loc[p, 'landcover'] = landcover_mask[i, j]
-                # ndvi_df.loc[p, 'ecoregion'] = ecoregion_mask[i, j]
+                ndvi_df.loc[p, 'landcover'] = landcover_mask[i, j]
+                ndvi_df.loc[p, 'ecoregion'] = ecoregion_mask[i, j]
                 ndvi_df.iloc[p,4+layer_count:4+layer_count+layers] = im_array[:, i, j]#this is a list that is layers long
                 #put the timeseries eg if this is first image 4+0 to 4+0+layers
                 #second image 4+46 to 4+46+46
@@ -142,8 +146,8 @@ for y in range(start_yr, end_yr+1):
 
     layer_count = layer_count + layers
 
-with open('ndvi_meta.pkl', 'wb') as file:
-    pickle.dump([ndvi_meta], file)
+# with open('ndvi_meta.pkl', 'wb') as file:
+#     pickle.dump([ndvi_meta], file)
 
 ndvi_df.to_csv('ndvi_pixels_'+county+'_8day.csv', encoding='utf-8', index=True)
 

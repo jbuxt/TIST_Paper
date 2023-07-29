@@ -6,46 +6,41 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import rasterio as rs
 import numpy as np
-import os
 import pickle
-from datetime import datetime as dt    
+  
 
 #################################################
 # Import masks 
 #################################################
 # county = input('Input the county to process: ')
-county = 'Tharaka'
-if county == 'Laikipia':
-    county_int = 1
-elif county == 'Meru':
-    county_int = 2
-elif county == 'Tharaka':
-    county_int = 3
-elif county == 'Nyeri':
-    county_int = 4
-elif county == 'Embu':
-    county_int = 5
-else: 
-    print('incorrect county entered')
-    #program will crash later lol
+# county = 'Tharaka'
+# if county == 'Laikipia':
+#     county_int = 1
+# elif county == 'Meru':
+#     county_int = 2
+# elif county == 'Tharaka':
+#     county_int = 3
+# elif county == 'Nyeri':
+#     county_int = 4
+# elif county == 'Embu':
+#     county_int = 5
+# else: 
+#     print('incorrect county entered')
+#     #program will crash later lol
 
 with open('veg_meta.pkl', 'rb') as file:
     veg_meta, veg_bound = pickle.load(file)
-
-im = rs.open('ecoregions_rasterized_correct_crs.tif')
-ecoregion = im.read(1)
-eco_meta = im.meta
-plt.imshow(ecoregion)
-im.close()
-
-with open ('ecoregion_mask.pkl', 'wb') as file:
-    pickle.dump(ecoregion, file)
 
 im = rs.open('landcover_WorldCoverv100_reprojected.tif')
 landcover= im.read(1)
 landcover_meta = im.meta
 plt.imshow(landcover)
 im.close()
+
+# Know that due to the mode reduction from 10m to 30m, this ended up with +1 pix on all sides except east/right 
+landcover = np.delete(landcover, [0, -1], 0) # delete first and last row
+landcover = np.delete(landcover, 0, 1) #delete first column
+
 
 with open ('landcover_mask.pkl', 'wb') as file:
     pickle.dump(landcover, file)
