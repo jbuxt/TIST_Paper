@@ -41,34 +41,36 @@ temp[0, :] = np.array([1,1,1,0]) #Set anything mapped to 0 as transparent
 missing_cm = ListedColormap(temp) 
 
 YlOrRd = mpl.colormaps['YlOrRd'] 
-temp = YlOrRd (np.linspace(0,1,256))
+temp = YlOrRd(np.linspace(0,1,256))
 temp[0, :] = np.array([1,1,1,0]) #Set anything mapped to 0 as transparent
 missing_pct_cm = ListedColormap(temp) 
 
 ##########################################################
-# Make the pngs that get loaded later 
+##Make the pngs that get loaded later 
 # landcover = rs.open('landcover_WorldCoverv100_reprojected(1).tif')
 # ecoregions = rs.open('ecoregions_rasterized.tif')
 
-# with rs.open('RESULTS/ndvi_missing_Meru.tif') as im:
-#   meru = im.read() #should have several layers 
+with rs.open('RESULTS/ndvi_missing_Meru.tif') as im:
+  meru = im.read() #should have several layers 
 
-# with rs.open('RESULTS/ndvi_missing_Tharaka.tif') as im:
-#   thar = im.read() #should have several layers 
-# with rs.open('RESULTS/ndvi_missing_Nyeri.tif') as im:
-#   nyeri = im.read() #should have several layers 
+with rs.open('RESULTS/ndvi_missing_Tharaka.tif') as im:
+  thar = im.read() #should have several layers 
+with rs.open('RESULTS/ndvi_missing_Nyeri.tif') as im:
+  nyeri = im.read() #should have several layers 
 
-# # let zeros be the nodata value that i will make clear 
-# missing_streak = meru[1,:,:] +  thar[1,:,:] +  nyeri[1,:,:] #add the others when they are done
-# missing_months = meru[0,:,:] +  thar[0,:,:] +  nyeri[0,:,:]
+# let zeros be the nodata value that i will make clear 
+missing_streak = meru[1,:,:] +  thar[1,:,:] +  nyeri[1,:,:] #add the others when they are done
+missing_months = meru[0,:,:] +  thar[0,:,:] +  nyeri[0,:,:]
 
-# #normalize and colorize
-# missing_months_colors = missing_pct_cm( np.round(((missing_months - 0) * (1/missing_months.max() - 0) * 255), 0))
-# missing_streak_colors = missing_cm( np.round(((missing_streak - 0) * (1/(missing_streak.max() - 0) * 255)), 0))
+#normalize and colorize
+missing_months_colors = missing_pct_cm( np.round(((missing_months - 0) * (1/missing_months.max() - 0) * 255), 0).astype('int8'))
+missing_streak_colors = missing_cm( np.round(((missing_streak - 0) * (1/(missing_streak.max() - 0) * 255)), 0).astype('int8'))
 
-# #Save as png 
-# mpl.image.imsave('missing_mo_for_map.png', missing_months_colors)
-# mpl.image.imsave('missing_streak_for_map.png', missing_streak_colors)
+## ISSUE: The things that are zero within the image are also getting masked aside from the zeros outside the image
+
+#Save as png 
+mpl.image.imsave('missing_mo_for_map.png', missing_months_colors)
+mpl.image.imsave('missing_streak_for_map.png', missing_streak_colors)
 
 # ANd then also an example NDVI 
 
@@ -108,7 +110,7 @@ f.GeoJson(counties_gp, name='Counties of Interest',
           popup=count_popup).add_to(my_map)
 
 f.GeoJson(tist_gp, name='TIST Groves',
-        style_function={"fillColor": "#00cc66", "fillOpacity": 0.3,"weight": 1, "color": "#00cc66"},
+        # style_function={"fillColor": "#00cc66", "fillOpacity": 0.3,"weight": 1, "color": "#00cc66"},
         popup=tist_popup).add_to(my_map)
 
 
