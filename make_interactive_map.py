@@ -1,9 +1,10 @@
-## Maddie Henderson 
+## Maddie Henderson - July 2023
 ## Make an interactive map to export to html
 '''
 ### TODO
-#https://stackoverflow.com/questions/58227034/png-image-not-being-displayed-on-folium-map
+# https://stackoverflow.com/questions/58227034/png-image-not-being-displayed-on-folium-map
 # Display a graph of the recovery rate at selected points?? could be very fun 
+# add colorbar
 '''
 
 
@@ -44,6 +45,33 @@ temp = YlOrRd (np.linspace(0,1,256))
 temp[0, :] = np.array([1,1,1,0]) #Set anything mapped to 0 as transparent
 missing_pct_cm = ListedColormap(temp) 
 
+##########################################################
+# Make the pngs that get loaded later 
+# landcover = rs.open('landcover_WorldCoverv100_reprojected(1).tif')
+# ecoregions = rs.open('ecoregions_rasterized.tif')
+
+# with rs.open('RESULTS/ndvi_missing_Meru.tif') as im:
+#   meru = im.read() #should have several layers 
+
+# with rs.open('RESULTS/ndvi_missing_Tharaka.tif') as im:
+#   thar = im.read() #should have several layers 
+# with rs.open('RESULTS/ndvi_missing_Nyeri.tif') as im:
+#   nyeri = im.read() #should have several layers 
+
+# # let zeros be the nodata value that i will make clear 
+# missing_streak = meru[1,:,:] +  thar[1,:,:] +  nyeri[1,:,:] #add the others when they are done
+# missing_months = meru[0,:,:] +  thar[0,:,:] +  nyeri[0,:,:]
+
+# #normalize and colorize
+# missing_months_colors = missing_pct_cm( np.round(((missing_months - 0) * (1/missing_months.max() - 0) * 255), 0))
+# missing_streak_colors = missing_cm( np.round(((missing_streak - 0) * (1/(missing_streak.max() - 0) * 255)), 0))
+
+# #Save as png 
+# mpl.image.imsave('missing_mo_for_map.png', missing_months_colors)
+# mpl.image.imsave('missing_streak_for_map.png', missing_streak_colors)
+
+# ANd then also an example NDVI 
+
 ############################################################
 # TIST groves and counties
 
@@ -83,44 +111,17 @@ f.GeoJson(tist_gp, name='TIST Groves',
         style_function={"fillColor": "#00cc66", "fillOpacity": 0.3,"weight": 1, "color": "#00cc66"},
         popup=tist_popup).add_to(my_map)
 
-# landcover = rs.open('landcover_WorldCoverv100_reprojected(1).tif')
-# ecoregions = rs.open('ecoregions_rasterized.tif')
 
-with rs.open('RESULTS/ndvi_missing_Meru.tif') as im:
-   meru = im.read() #should have several layers 
-  #  deal with nan???
-   meru_meta = im.meta
-  #get the bounding box 
-   t_bounds = [[im.bounds[1], im.bounds[0]], [im.bounds[3],im.bounds[2]]]
-   t_bands = im.descriptions
+##################################################################################3
+# RASTER LAYERS
 
-
-
-# let zeros be the nodata value that i will make clear 
-# Import meru, tharaka, nyeri missing
-# Add together
-# Normalize
-#Colorze
-#Save as png 
-
-#Do this for misisng months and longest missing streak 
-# ANd then also an example NDVI 
-
-# How to add colorbar?
-
-### COULD PROBS SAVE TIME SAVING AS PNG
-colors_meru0 = np.round(((meru[0,:,:] - 0) * (1/(meru[0,:,:].max() - 0) * 255)), 0).astype('uint8')
-colors_meru1 = missing_cm(np.round(((meru[1,:,:] - 0) * (1/(meru[1,:,:].max() - 0) * 255)),0).astype('uint8'))
-
-# mpl.image.imsave('meru_missing_for_map.png', missing_cm(scaled_meru0))
-
-f.raster_layers.ImageOverlay('meru_missing_for_map.png', #LONGEST MISSING STREAK 
+f.raster_layers.ImageOverlay('missing_streak_for_map.png', #LONGEST MISSING STREAK 
                   bounds=t_bounds, #[[lat_min, lon_min], [lat_max, lon_max]]
-                  name = 'Longest missing streak (months)',
+                  name = 'Longest missing streak (months) in Landsat data',
                   ).add_to(my_map)
 
 
-f.raster_layers.ImageOverlay(colors_meru0 ,
+f.raster_layers.ImageOverlay('missing_mo_for_map.png',
                   bounds=t_bounds, #[[lat_min, lon_min], [lat_max, lon_max]
                   name = '% Months missing from Landsat data',
                   ).add_to(my_map)
