@@ -4,7 +4,7 @@
 ### TODO
 # https://stackoverflow.com/questions/58227034/png-image-not-being-displayed-on-folium-map
 # Display a graph of the recovery rate at selected points?? could be very fun 
-# add colorbar
+# add colorbar that's not ugly
 # popup color https://stackoverflow.com/questions/62789558/is-it-possible-to-change-the-popup-background-colour-in-folium
 
 '''
@@ -32,30 +32,38 @@ t_bounds = [[-0.9639821313886587, 36.11092694867859], [0.8877151637669112, 38.47
 ###############################
 #STYLE 
 
-Viridis = mpl.colormaps['viridis']
+# Viridis = mpl.colormaps['viridis']
 
 Greens = mpl.colormaps['Greens']
+temp3 = Greens(np.linspace(0,1, 256))
+temp3[:, 3] = 0.7 #set everything kinda transparent
+temp3[0, :] = np.array([1,1,1,0]) #Set anything mapped to 0 as transparent
+Greens  = ListedColormap(temp3)
+
+# Purples = mpl.colormaps['Purples'] 
+# temp1 = Purples(np.linspace(0,1,256))
+# temp1[0, :] = np.array([1,1,1,0]) #Set anything mapped to 0 as transparent
+# missing_cm = ListedColormap(temp1)
 
 
-Purples = mpl.colormaps['Purples'] 
-temp1 = Purples(np.linspace(0,1,256))
-temp1[0, :] = np.array([1,1,1,0]) #Set anything mapped to 0 as transparent
-missing_cm = ListedColormap(temp1)
-
-
-YlOrRd = mpl.colormaps['YlOrRd'] 
-temp2 = YlOrRd(np.linspace(0,1,256))
-temp2[0, :] = np.array([1,1,1,0]) #Set anything mapped to 0 as transparent
-missing_pct_cm = ListedColormap(temp2) 
+# YlOrRd = mpl.colormaps['YlOrRd'] 
+# temp2 = YlOrRd(np.linspace(0,1,256))
+# temp2[0, :] = np.array([1,1,1,0]) #Set anything mapped to 0 as transparent
+# missing_pct_cm = ListedColormap(temp2) 
 
 ##########################################################
 ##Make the pngs that get loaded later (only need to do once)
 ##landcover = rs.open('landcover_WorldCoverv100_reprojected(1).tif')
 ##ecoregions = rs.open('ecoregions_rasterized.tif')
 
+# with open('county_mask.pkl', 'rb') as file:
+#    county_mask= pickle.load(file)
+# new = county_mask != 0 
+# county_mask = new * 1
+
+
 # with rs.open('RESULTS/ndvi_missing_Meru.tif') as im:
 #   meru = im.read() #should have several layers 
-
 # with rs.open('RESULTS/ndvi_missing_Tharaka.tif') as im:
 #   thar = im.read() #should have several layers 
 # with rs.open('RESULTS/ndvi_missing_Nyeri.tif') as im:
@@ -65,13 +73,23 @@ missing_pct_cm = ListedColormap(temp2)
 # missing_streak = meru[1,:,:] +  thar[1,:,:] +  nyeri[1,:,:] #add the others when they are done
 # missing_months = meru[0,:,:] +  thar[0,:,:] +  nyeri[0,:,:]
 
-# #normalize and colorize
-# missing_months_colors = missing_pct_cm( np.round(((missing_months - 0) * (1/1 - 0) * 255), 0).astype('int8')) #I know the max missing months % is 1
-# missing_streak_colors = missing_cm( np.round(((missing_streak - 0) * (1/(50 - 0) * 255)), 0).astype('int8')) # I know the max missing streak is like 50
+# # #normalize and colorize
+# missing_months_colors = missing_pct_cm( np.round(((missing_months - 0) * (1/1 - 0) * 255), 0).astype('int16')) #I know the max missing months % is 1
+# missing_streak_colors = missing_cm( np.round(((missing_streak - 0) * (1/(50 - 0) * 255)), 0).astype('int16')) # I know the max missing streak is like 50
 
-# ## ISSUE: The things that are zero within the image are also getting masked aside from the zeros outside the image
+### NDVI example
+# with rs.open('ndvi_pic.tif') as im:
+#   ndvi = im.read(1) #should have several layers 
+# ndvi = np.nan_to_num(ndvi, copy=True, nan=-1, posinf=None, neginf=None)
 
-# #Save as png 
+# ndvi =ndvi[1:-1, 1:] * county_mask
+# ndvi[ndvi ==0] = -1 #set the ones we just masked to -1
+# ndvi_colors = Greens( np.round(((ndvi +1) * 0.5 * 255), 0).astype('int16')) # range -1 to 1
+
+# mpl.image.imsave('ndvi_ex.png', ndvi_colors)
+## ISSUE: The things that are zero within the image are also getting masked aside from the zeros outside the image
+
+# # #Save as png 
 # mpl.image.imsave('missing_mo_for_map.png', missing_months_colors)
 # mpl.image.imsave('missing_streak_for_map.png', missing_streak_colors)
 
@@ -82,6 +100,11 @@ missing_pct_cm = ListedColormap(temp2)
 
 with open('tist_and_counties_gp.pkl', 'rb') as file:
    tist_gp, counties_gp= pickle.load(file)
+
+select = np.round(np.random.rand(5000) * 30000, 0).astype('int16')# get 5000 random tist groves
+ #reduced for putting on web
+tist_gp = tist_gp.loc[select, ['Trees', 'Name', 'geometry']]
+counties_gp = counties_gp.loc[:, ['geometry', 'COUNTY']]
 
 tist_popup = GeoJsonPopup(
     fields=['Trees', "Name"],
@@ -113,54 +136,78 @@ f.GeoJson(counties_gp, name='Counties of Interest',
           popup=count_popup).add_to(my_map)
 
 f.GeoJson(tist_gp, name='TIST Groves',
-        style_function= lambda x: {"fillColor": "#00cc66", "fillOpacity": 0.3,"weight": 1, "color": "#00cc66"},
+        style_function= lambda x: {"fillColor": "#00cc66", "fillOpacity": 0.3,"weight": 1, "color": "#000000"},
         popup=tist_popup).add_to(my_map)
 
 
 ##################################################################################3
 # RASTER LAYERS
 
-f.raster_layers.ImageOverlay('missing_streak_for_map.png', #LONGEST MISSING STREAK 
-                  bounds=t_bounds, #[[lat_min, lon_min], [lat_max, lon_max]]
-                  name = 'Longest missing streak (months) in Landsat data',
-                  ).add_to(my_map)
+# f.raster_layers.ImageOverlay('missing_streak_for_map.png', #LONGEST MISSING STREAK 
+#                   bounds=t_bounds, #[[lat_min, lon_min], [lat_max, lon_max]]
+#                   name = 'Longest missing streak (months) in Landsat data',
+#                   ).add_to(my_map)
 
 
-f.raster_layers.ImageOverlay('missing_mo_for_map.png',
+# f.raster_layers.ImageOverlay('missing_mo_for_map.png',
+#                   bounds=t_bounds, #[[lat_min, lon_min], [lat_max, lon_max]
+#                   name = '% Months missing from Landsat data',
+#                   ).add_to(my_map)
+
+
+f.raster_layers.ImageOverlay('ndvi_ex.png',
                   bounds=t_bounds, #[[lat_min, lon_min], [lat_max, lon_max]
-                  name = '% Months missing from Landsat data',
+                  name = 'NDVI from Landsat 8',
                   ).add_to(my_map)
 ###############################################################
 # FINISH AND SAVE
-#colormaps
-cm1 = f.LinearColormap(colors = [tuple(row) for row in temp2], 
-                       index = np.linspace(0, 1, num=255),
-                       vmin = 0, 
-                       vmax = 1) #probably need to edit this to correspond max/min of usecase
-cm2 = f.LinearColormap(colors = [tuple(row) for row in temp1],
-                       index = np.linspace(0, 50, num=255),
-                       vmin = 0, 
-                       vmax = 50)
-cm1.caption = 'Percent of months missing from Landsat data'
-cm2.caption = 'Number of missing months in longest missing streak'
+#colormaps since folium doesn't seem to play well with matplotlib
+# cm1 = f.LinearColormap(colors = [tuple(row) for row in temp2], 
+#                        index = np.linspace(0, 1, num=255),
+#                        vmin = 0, 
+#                        vmax = 1, 
+#                        caption='Percent of months missing from Landsat-8 data (2013-23)') #probably need to edit this to correspond max/min of usecase
+# cm2 = f.LinearColormap(colors = [tuple(row) for row in temp1],
+#                        index = np.linspace(0, 50, num=255),
+#                        vmin = 0, 
+#                        vmax = 50, 
+#                        caption='Number of missing months in longest missing streak')
+cm3 = f.LinearColormap(colors = [tuple(row) for row in temp3],
+                       index = np.linspace(-1, 1, num=255),
+                       vmin = -1, 
+                       vmax = 1, #IDIOT 
+                       caption='NDVI (Vegetation Greeness)')
 
-cmap_HTML = cm1._repr_html_()
-cmap2_HTML = cm2._repr_html_()
-cmap_HTML = cmap_HTML.replace('<svg height="50" width="500">','<svg id="cmap" height="50" width="500">',1)
-cmap2_HTML = cmap2_HTML.replace('<svg height="50" width="500">','<svg id="cmap" height="50" width="500">',1)
-cmap_style = '<style>#cmap {background-color: green;}</style>'
-cmap2_style = '<style>#cmap {background-color: green;}</style>'
+#add a background to the colorbar - hacky and stolen from
+#https://stackoverflow.com/questions/44887461/how-to-add-a-background-color-of-a-colormap-in-a-folium-map
+# cmap_HTML = cm1._repr_html_()
+# cmap_HTML = cmap_HTML.replace('<svg height="50" width="400">','<svg id="cmap" height="50" width="400">',1)
+# cmap_style = '<style>#cmap {background-color: green;}</style>'
 
-my_map.get_root().header.add_child(f.Element(cmap_style))
-my_map.get_root().header.add_child(f.Element(cmap2_style))
+# cmap2_HTML = cm2._repr_html_()
+# cmap2_HTML = cmap2_HTML.replace('<svg height="50" width="400">','<svg id="cmap" height="50" width="400">',1)
+# cmap2_style = '<style>#cmap {background-color: green;}</style>'
+
+cmap3_HTML = cm3._repr_html_()
+cmap3_HTML = cmap3_HTML.replace('<svg height="50" width="400">','<svg id="cmap" height="50" width="400">',1)
+cmap3_style = '<style>#cmap {background-color: green;}</style>'
+
+
+
+# my_map.get_root().header.add_child(f.Element(cmap_style))
+# my_map.get_root().header.add_child(f.Element(cmap2_style))
+my_map.get_root().header.add_child(f.Element(cmap3_style))
+
 f.map.LayerControl().add_to(my_map)
-my_map.get_root().html.add_child(f.Element(cmap_HTML))
-my_map.get_root().html.add_child(f.Element(cmap2_HTML))
+
+# my_map.get_root().html.add_child(f.Element(cmap_HTML))
+# my_map.get_root().html.add_child(f.Element(cmap2_HTML))
+my_map.get_root().html.add_child(f.Element(cmap3_HTML))
 # my_map.add_child(cm1)
 # my_map.add_child(cm2)
 
 # my_map.add_child(f.LayerControl())
-my_map.save('intro_map.html')
+my_map.save('TEST_map.html')
 
 print('donezo')
 
