@@ -18,7 +18,7 @@ import pandas as pd
 import numpy as np 
 import matplotlib.pyplot as plt 
 import STL_Fitting as stl
-import pickle
+#import pickle
 
 
 # Load the veg data #############################################
@@ -121,13 +121,17 @@ smoothed_ndvi_df.loc[:,:] = ndvi_res_flat.reshape(nrows, 121)
 '''
 ndvi_array = np.array(ndvi_df.iloc[:, 4:].astype('float32'))
 
+
 for i in ndvi_res.index:
     decomp = stl.robust_stl(ndvi_array[i, :], period = 12, smooth_length = 21)
-    ndvi_res.iloc[i, 4:] = decomp.resid
-
+    ndvi_array[i, :] = decomp.resid
     # decomp.plot()
     # plt.xticks(rotation=90)
     # plt.show()
+
+ndvi_res.iloc[:, 4:] = ndvi_array.astype('float32')
+
+    
 
 ###### Now remove the values that were originally nan and not interpolated
 ndvi_res.mask(empty_mask, np.nan, inplace=True)
