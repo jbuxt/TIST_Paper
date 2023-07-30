@@ -80,45 +80,7 @@ ndvi_df.mask(empty_mask, all_avg, inplace= True) #mask replaces values that are 
 ndvi_res = ndvi_df.copy()
 ndvi_res.iloc[:, 4:] = 0
 
-'''
-#add a nan column to the end after interpolation so that it always splits on that 
-smoothed_ndvi_df['empty']=np.nan
-mask  = np.empty((nrows, 121)).flatten() #make a mask the size of the data 
-mask[:] = np.nan 
 
-
-#https://stackoverflow.com/questions/41494444/pandas-find-longest-stretch-without-nan-values
-
-flat_ndvi = smoothed_ndvi_df.values.flatten().astype('float32')
-m = np.concatenate(( [True], np.isnan(flat_ndvi), [True] ))  
-ss = np.flatnonzero(m[1:] != m[:-1]).reshape(-1,2)   # Start-stop limits - for the whole df flattened to 1D
-#get any sections longer than 48 pts in this row because need a few years for good seasonal decomp
-ss = ss[((ss[:,1] - ss[:,0]) >= 48)]
-
-#set everything outside of these intervals to NaN
-for start, stop in ss:
-    mask[start:stop] = 1
-
-#apply mask - now all 'rows' have either 1 or 2 longer continuous runs 
-flat_ndvi = flat_ndvi * mask
-
-# STL decomp ###########################################
-ndvi_res_flat = np.empty((nrows, 121)).flatten()
-ndvi_res_flat[:] = np.nan
-
-for start, stop in ss: 
-    sample = flat_ndvi[start:stop] #get the continuous slice 
-    #apply the decomp and get residual
-    decomp = stl.robust_stl(sample, period = 12, smooth_length = 21)
-    ndvi_res_flat[start:stop] = decomp.resid
-
-    # decomp.plot()
-    # plt.xticks(rotation=90)
-    # plt.suptitle('STL')
-    # plt.show()
-    
-smoothed_ndvi_df.loc[:,:] = ndvi_res_flat.reshape(nrows, 121)
-'''
 ndvi_array = np.array(ndvi_df.iloc[:, 4:].astype('float32'))
 
 
@@ -130,7 +92,6 @@ for i in ndvi_res.index:
     # plt.show()
 
 ndvi_res.iloc[:, 4:] = ndvi_array.astype('float32')
-
     
 
 ###### Now remove the values that were originally nan and not interpolated
@@ -141,24 +102,11 @@ mean = ndvi_res.iloc[:, 4:].mean(axis = 1)
 stdev = ndvi_res.iloc[:, 4:].std(axis = 1)
 ndvi_res = pd.concat([ndvi_res, mean.rename('mean'), stdev.rename('stdev')], axis = 1)
 
-'''
-#copy over the rows and columns etc
-smoothed_ndvi_df = pd.concat([ndvi_df[['row','col','tist', 'county']], smoothed_ndvi_df], axis = 1)
 
-#get the rows and cols of array that the ss is referring to once ndvi is reshaped 
-ss_cols = ss % 121 #this now more closely aligns with the date 
-ss_rows = np.floor(ss[:,0] / 121) #gives the row of the dataframe that it corresponds to 
-'''
 #do NOT delete rows without enough data yet- makes it annoying to deal with loc instead of iloc 
 
 #Save to CSV - writes indices to col 0
 ndvi_res.to_csv('ndvi_residuals_'+county+'_V2.csv', encoding='utf-8', index=True)
 
-'''
-#Save the ss !!
-with open(county+'_ss.pkl', 'wb') as file:
-    # A new file will be created
-    pickle.dump([ss, ss_rows, ss_cols], file)
-'''
 
 print('donezo')
