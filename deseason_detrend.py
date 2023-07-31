@@ -29,7 +29,7 @@ outfile = 'ndvi_residuals_'+county+'_V2.csv'
 infile = 'ndvi_pixels_'+county+'.csv'
 count = 0
 #Use chunksize to speed this up 
-with pd.read_csv(infile, chunksize=10000) as reader:
+with pd.read_csv(infile, chunksize=5000) as reader:
 
     for ndvi_df in reader:
         print('processing chunk ', count)
