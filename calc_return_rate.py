@@ -168,7 +168,7 @@ with pd.read_csv(infile, chunksize=10000) as reader:
                             raise Exception('nonsensical model')
                         
                     except Exception as e: 
-                        print(e)
+                        # print(e)
                         # if you can't calculate for some reason set to 10 (nan signifies empty/not attempted)
                         #could be not enough data/min at the end of the sample 
                         r= 10
