@@ -66,7 +66,7 @@ a_guess, b_guess, c_guess = -0.05, -0.2, .05  #Somewhat optimized with testing
 count = 0
 #####################################################################################
 #Use chunksize to speed this up 
-with pd.read_csv(infile, chunksize=10000) as reader:
+with pd.read_csv(infile, chunksize=5000) as reader:
 
     for ndvi_res in reader:
         print('processing chunk ', count)
@@ -201,5 +201,5 @@ with pd.read_csv(infile, chunksize=10000) as reader:
         # append to csv
         ndvi_results.to_csv('ndvi_results_'+county+'_V2.csv', encoding='utf-8', index=False, 
                             mode = 'a', header=not os.path.exists(outfile))
-
+        count += 1
 print('donezo')
