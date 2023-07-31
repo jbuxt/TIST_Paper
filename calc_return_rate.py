@@ -18,18 +18,8 @@ from scipy.optimize import curve_fit
 county = input('Input the county to process: ')
 # county = 'Tharaka'
 n_obvs = 9 #number of vals out of 12 to accept for recovery calculation 
-
-# with open('./intermediate_landsat/'+county+'_ss.pkl', 'rb') as file:
-#    ss, ss_rows, ss_cols= pickle.load(file)
-# ss_rows = ss_rows.astype('int')
    
-ndvi_res  = pd.read_csv('ndvi_residuals_'+county+'_V2.csv', index_col=0) 
-#keep the index column as that is what the ss_rows corresponds to: 
-
-
-#TEMPORARY FOR NROWS LIMIT
-# ss_cols = ss_cols[ss_rows < 5000]
-# ss_rows = ss_rows[ss_rows < 5000]
+ndvi_res  = pd.read_csv('ndvi_residuals_'+county+'_V2.csv') 
 
 
 #### Calculate the recovery rates based on NDMA drought classification dates #####################
@@ -60,13 +50,6 @@ recov_stop[recov_stop > 119] = 119 #in case there's any that are close to the en
 # print('% pix missing for r59: ', r59.isna().sum().sum() / (r59.size))
 # r77 =  ndvi_df.iloc[:, (77-5):(77+6)]
 
-'''
-#Make an array with columns that show which ss pairs/rows are valid for each of the recovery periods 
-ss_overlap = np.empty((len(ss_rows), n_recovs))
-for x in range(n_recovs):
-   ss_overlap[:, x] = (ss_cols[:, 0]<= recov_start[x]) & (ss_cols[:,1] >= recov_stop[x]) #Boolean 
-ss_overlap = ss_overlap.astype('bool')
-'''
 ####### Calculate the recovery rates for each designated recovery period ############################
 
 # initialize a df for results 
@@ -86,10 +69,7 @@ a_guess, b_guess, c_guess = -0.05, -0.2, .05  #Somewhat optimized with testing
 
 for z in range(n_recovs): #Z goes through the recoveries 
     print('starting recovery calculation for recovery number '+str(z))
-    '''
-    valid_rows = ss_rows[ss_overlap[:,z]]#these are the rows to look at for the first recovery period 
-    n_valid_rows = len(valid_rows)
-    '''
+
     #grab any rows that have at least n_obvs observations in the recovery window 
     # +4 because there are 4 extra columns at the front end of the df
     # and +5 because want the recovery stop to be inclusive  
@@ -130,7 +110,7 @@ for z in range(n_recovs): #Z goes through the recoveries
             #need to have at least 3 of the orig pts to get anything - if not it will error out 
             #(THis could be changed if I did a diff fitting method - using the default scipy curvefit option rn)
             #but have to have a check here so it doesn't get covered up by adding 12 means afterwards
-            #if len(sample) >=3: 
+
             if sample.count() >=3: #require at least 3 real data points incl the min to fit 
                 temp[:] = valid_means.iloc[n] #iloc good
                 sample = pd.concat([sample, pd.Series(temp)]) 
@@ -183,8 +163,6 @@ for z in range(n_recovs): #Z goes through the recoveries
             r= 15
             rsquared = 15
             y_curvefitted = 15 
-
-        # print('recovery rate: ', r, '\nRsq: ', rsquared)
 
         recov_rates[n] = r
         Rsq[n] = rsquared
