@@ -12,7 +12,11 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.optimize import curve_fit
 import os
+import warnings
 ##############################################################
+warnings.filterwarnings("ignore", category=Warning) 
+#because you will get a lot of scipy 'Optimize Warning: Covariance of the parameters could not be estimated"
+# and don't need that clogging print screen 
 
 county = input('Input the county to process: ')
 infile = 'ndvi_residuals_'+county+'_V2.csv'
