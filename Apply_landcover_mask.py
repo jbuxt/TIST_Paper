@@ -5,8 +5,8 @@
 ## will remove rows that are not in the landcover of interest 
 
 import pandas as pd 
-import matplotlib.pyplot as plt
-import rasterio as rs
+# import matplotlib.pyplot as plt
+# import rasterio as rs
 import numpy as np
 import pickle
 #################################################
@@ -58,7 +58,6 @@ df_10['landcover'] = 10
 #concat
 lc_df = pd.concat([df_40, df_30, df_20, df_10], axis=0)
 
-
 val_lc_results = result_df.merge(lc_df, how='inner', on=['row', 'col'])
 
 #### ecoregions 
@@ -82,20 +81,6 @@ df_57['eco'] = 57
 
 eco_df = pd.concat([df_78, df_8, df_51, df_57], axis=0)
 final_results = val_lc_results.merge(eco_df, how='inner', on=['row', 'col'])
-
-# #Number of pixels in each county: 
-# n_Laikipia = 10837687 
-# n_Meru = 7720270
-# n_Theraka = 2990072
-# n_Nyeri = 3733796
-# n_Kirinyaga = 1652252
-# n_Embu = 3170195
-
-# rows = 6871 #in total picture
-# cols = 8786
-
-# n_ROI = 30,104,272 #all counties 
-
 
 final_results.to_csv('ndvi_results_w_landcover'+county+'.csv', encoding='utf-8', index=False)
 
