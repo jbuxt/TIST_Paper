@@ -8,9 +8,7 @@
 # popup color https://stackoverflow.com/questions/62789558/is-it-possible-to-change-the-popup-background-colour-in-folium
 
 '''
-
-
-import pandas as pd 
+# import pandas as pd 
 import folium as f
 from folium.features import GeoJsonPopup, GeoJsonTooltip
 import matplotlib.pyplot as plt
@@ -62,35 +60,35 @@ missing_pct_cm = ListedColormap(temp2)
 # county_mask = new * 1
 
 
-with rs.open('RESULTS/Missing/ndvi_missing_Meru.tif') as im:
-  meru = im.read() #outside of county is zero
-with rs.open('RESULTS/Missing/ndvi_missing_Tharaka.tif') as im:
-  thar = im.read() #outside of county is zero
-with rs.open('RESULTS/Missing/ndvi_missing_Nyeri.tif') as im:
-  nyeri = im.read() #outside of county is zero
-with rs.open('RESULTS/Missing/ndvi_missing_Laikipia.tif') as im:
-  lai = im.read() #outside of county is nan
-  np.nan_to_num(lai, copy=False, nan=0.0)
-with rs.open('RESULTS/Missing/ndvi_missing_Embu.tif') as im:
-  embu = im.read() #outside of county is nan
-  np.nan_to_num(embu, copy=False, nan=0.0)
+# with rs.open('RESULTS/Missing/ndvi_missing_Meru.tif') as im:
+#   meru = im.read() #outside of county is zero
+# with rs.open('RESULTS/Missing/ndvi_missing_Tharaka.tif') as im:
+#   thar = im.read() #outside of county is zero
+# with rs.open('RESULTS/Missing/ndvi_missing_Nyeri.tif') as im:
+#   nyeri = im.read() #outside of county is zero
+# with rs.open('RESULTS/Missing/ndvi_missing_Laikipia.tif') as im:
+#   lai = im.read() #outside of county is nan
+#   np.nan_to_num(lai, copy=False, nan=0.0)
+# with rs.open('RESULTS/Missing/ndvi_missing_Embu.tif') as im:
+#   embu = im.read() #outside of county is nan
+#   np.nan_to_num(embu, copy=False, nan=0.0)
 
-# # let zeros be the nodata value that i will make clear 
-# could set all nodata to -1 for these which would get mapped as clear if i moved the range up by one 
-missing_streak = meru[1,:,:] +  thar[1,:,:] +  nyeri[1,:,:] + embu[1,:,:] + lai[1,:,:] 
-missing_months = meru[0,:,:] +  thar[0,:,:] +  nyeri[0,:,:] + embu[0,:,:] + lai[0,:,:]
-#should probably also save this in one image / csv for spotfire analysis 
+# # # let zeros be the nodata value that i will make clear 
+# # could set all nodata to -1 for these which would get mapped as clear if i moved the range up by one 
+# missing_streak = meru[1,:,:] +  thar[1,:,:] +  nyeri[1,:,:] + embu[1,:,:] + lai[1,:,:] 
+# missing_months = meru[0,:,:] +  thar[0,:,:] +  nyeri[0,:,:] + embu[0,:,:] + lai[0,:,:]
+# #should probably also save this in one image / csv for spotfire analysis 
 
-#change nan to 0 for the picture 
-# np.nan_to_num(missing_streak, copy=False, nan=0.0)
-# np.nan_to_num(missing_months, copy=False, nan=0.0)
+# #change nan to 0 for the picture 
+# # np.nan_to_num(missing_streak, copy=False, nan=0.0)
+# # np.nan_to_num(missing_months, copy=False, nan=0.0)
 
-# # #normalize and colorize
-missing_months_colors = missing_pct_cm( np.round(((missing_months - 0) * (1/(1 - 0) * 255)), 0).astype('int16')) #I know the max missing months % is 1
-missing_streak_colors = missing_cm( np.round(((missing_streak - 0) * (1/(36 - 0) * 255)), 0).astype('int16')) # I know the max missing streak is like 50
-# # #Save as png 
-mpl.image.imsave('missing_mo_for_map.png', missing_months_colors)
-mpl.image.imsave('missing_streak_for_map.png', missing_streak_colors)
+# # # #normalize and colorize
+# missing_months_colors = missing_pct_cm( np.round(((missing_months - 0) * (1/(1 - 0) * 255)), 0).astype('int16')) #I know the max missing months % is 1
+# missing_streak_colors = missing_cm( np.round(((missing_streak - 0) * (1/(36 - 0) * 255)), 0).astype('int16')) # I know the max missing streak is like 50
+# # # #Save as png 
+# mpl.image.imsave('missing_mo_for_map.png', missing_months_colors)
+# mpl.image.imsave('missing_streak_for_map.png', missing_streak_colors)
 
 ### NDVI example############################
 # with rs.open('ndvi_pic.tif') as im:
