@@ -1,4 +1,7 @@
-#take calculated return rates and turn them into maps / layers 
+# Input - results csv / df
+# Output - tif file with recovery rates, rsq, and local min for each 
+# recovery as a layer 
+# take calculated return rates and turn them into maps / layers 
 
 import pandas as pd
 import rasterio as rs
@@ -29,5 +32,5 @@ ndvi_results_array = df_to_map(ndvi_results, col_names, savefile=True,
 
 # plt.imshow(ndvi_results_array[:,:,0])
 # plt.show()
-#NOTE that it gets filled with zeros -- 
+
 print('donezo')
