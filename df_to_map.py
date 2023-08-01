@@ -51,16 +51,3 @@ def df_to_map(df, col_names, rows=6871, cols=8786, savefile=False, fname='output
             print('tif saved to: '+fname)
 
     return array
-
-
-# #testing 
-
-# ndvi = pd.read_csv('ndvi_pixels_sample.csv') 
-# ndvi['Average']=ndvi.filter(like='20').mean(axis= 1, skipna=True)
-# ndvi['Max']=ndvi.filter(like='20').max(axis= 1)
-# img = df_to_array_map(ndvi, ['Average', 'Max'])
-
-# plt.imshow(img[:,:, 0])
-
-# plt.imshow(img[:,:, 1])
-# print('done')
