@@ -27,7 +27,7 @@ col_names = ndvi_results.filter(like = 'recov').columns.values.tolist() + ndvi_r
 ndvi_results_array = df_to_map(ndvi_results, col_names, savefile=True, 
                              fname='ndvi_results_'+county+'_V2.tif', meta=ndvi_meta)
 
-plt.imshow(ndvi_results_array[:,:,0])
-plt.show()
+# plt.imshow(ndvi_results_array[:,:,0])
+# plt.show()
 #NOTE that it gets filled with zeros -- 
 print('donezo')
