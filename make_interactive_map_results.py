@@ -22,30 +22,30 @@ import pickle
 ###############################
 #STYLE 
 
-# Viridis = mpl.colormaps['viridis']
-# temp = Viridis(np.linspace(0,1, 256))
-# temp[:, 3] = 0.7 #set everything kinda transparent
-# temp[0, :] = np.array([1,1,1,0]) #Set anything mapped to the min as transparent
-# Recovery  = ListedColormap(temp)
+Viridis = mpl.colormaps['viridis']
+temp = Viridis(np.linspace(0, 1, 256))
+temp[:, 3] = 0.7 #set everything kinda transparent
+temp[0, :] = np.array([1,1,1,0]) #Set anything mapped to the min as transparent
+r_cm  = ListedColormap(temp)
 
-nodes = [-60, -5, -5, 0.1, 0.1, 9, 9, 15]
-norm = plt.Normalize(min(nodes), max(nodes))
-colors = ['darkgreen','darkgreen', 'green', 'lightgreen', 'honeydew' ,'honeydew', 'gold', 'gold' ]
-recov_cm  = LinearSegmentedColormap.from_list("", list(zip(map(norm, nodes), colors)))
-recov_cm.set_under('lightpink')
-recov_cm.set_over('royalblue') # unsure how to make this transparent
 
-data = np.random.rand(10,10) * 10-10
-data[0, 2] = 10
-data[0,3] = 15
-data[0,0] = -100
+#for the problematic ones 
+cmap = plt.get_cmap('PuOr', 2)
+cmap.set_under('#FFFFFF00')
 
-fig, ax = plt.subplots()
-im = ax.imshow(data, cmap=recov_cm, vmin=-60, vmax=11)
-fig.colorbar(im, extend='both')
-plt.show()
-########################
-# ##################################
+# data = np.random.rand(10,10)
+# data[:, 0:2] = 10
+# data[:, 2:4] = 11
+# data[:, 4:6] = 15
+# data[:, 6:8] = 20
+# data[:, 8:10] = 0
+
+# fig, ax = plt.subplots()
+# im = ax.imshow(data, cmap=cmap, vmin=10, vmax=15)
+# fig.colorbar(im, extend='min')
+# plt.show()
+
+######################## # ##################################
 ##Make the pngs that get loaded later (only need to do once)
 
 # with open('county_mask.pkl', 'rb') as file:
@@ -54,18 +54,29 @@ plt.show()
 # county_mask = new * 1
 
 
-# with rs.open('RESULTS/Missing/ndvi_missing_Meru.tif') as im:
-#   meru = im.read() #outside of county is zero
-# with rs.open('RESULTS/Missing/ndvi_missing_Tharaka.tif') as im:
-#   thar = im.read() #outside of county is zero
-# with rs.open('RESULTS/Missing/ndvi_missing_Nyeri.tif') as im:
-#   nyeri = im.read() #outside of county is zero
-# with rs.open('RESULTS/Missing/ndvi_missing_Laikipia.tif') as im:
+with rs.open('RESULTS/V2/ndvi_results_Meru_V2.tif') as im:
+  meru = im.read() #outside of county is nan
+  meru_bands = im.descriptions
+np.nan_to_num(meru, copy=False, nan=-100)
+with rs.open('RESULTS/V2/ndvi_results_Tharaka_V2.tif') as im:
+  thar = im.read() 
+  thar_bands =im.descriptions
+np.nan_to_num(thar, copy=False, nan=-100)
+with rs.open('RESULTS/V2/ndvi_results_Nyeri_V2.tif') as im:
+  nyeri = im.read() #
+  nyeri_bands =im.descriptions
+np.nan_to_num(nyeri, copy=False, nan=-100)
+# with rs.open('RESULTS/V2/ndvi_results_Laikipia_V2.tif') as im:
 #   lai = im.read() #outside of county is nan
+    # lai_bands =im.descriptions
 #   np.nan_to_num(lai, copy=False, nan=0.0)
-# with rs.open('RESULTS/Missing/ndvi_missing_Embu.tif') as im:
-#   embu = im.read() #outside of county is nan
-#   np.nan_to_num(embu, copy=False, nan=0.0)
+with rs.open('RESULTS/V2/ndvi_results_Embu_V2.tif') as im:
+  embu = im.read() #outside of county is nan
+  embu_bands = im.descriptions
+np.nan_to_num(embu, copy=False, nan=-100)
+
+#Goals 
+# 2 images for each recovery - one of the legit vals , one of the 10s and 15s 
 
 # # # let zeros be the nodata value that i will make clear 
 # # could set all nodata to -1 for these which would get mapped as clear if i moved the range up by one 
