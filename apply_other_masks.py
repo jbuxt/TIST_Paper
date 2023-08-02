@@ -32,7 +32,7 @@ result_df = pd.read_csv(infile)
 result_df = result_df.merge(ndvi_mean, how='left', on=['row', 'col'])
 
 # save as a tif for all pix in county
-df_to_map(ndvi_mean, ['mean_ndvi', 'stdev_ndvi'], savefile = True, fname = 'ndvi_mean_'+county+'.tif', meta = veg_meta)
+# df_to_map(ndvi_mean, ['mean_ndvi', 'stdev_ndvi'], savefile = True, fname = 'ndvi_mean_'+county+'.tif', meta = veg_meta)
 
 ###################################################################
 # altitude 
@@ -48,7 +48,6 @@ im.close()
 alt_array = np.delete(alt_array, [0, -1], 0) # delete first and last row
 alt_array = np.delete(alt_array, 0, 1) #delete first column
 
-result_df = pd.read_csv(infile)
 # relevant values 
 result_df['alt'] = alt_array[result_df['row'], result_df['col']]
 
