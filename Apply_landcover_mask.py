@@ -4,18 +4,14 @@
 ## to result dfs so that csvs can be used in spotfire 
 ## will remove rows that are not in the landcover of interest 
 
+# also apply and save as tif and rearrange the results tifs 
+# into separate tifs by drought so that QGIS likes them better 
+
 import pandas as pd 
-# import matplotlib.pyplot as plt
-# import rasterio as rs
+import matplotlib.pyplot as plt
+import rasterio as rs
 import numpy as np
 import pickle
-#################################################
-county = input('Input the county to process: ')
-infile = 'ndvi_results_'+county+'_V2.csv'
-
-result_df = pd.read_csv(infile)
-result_df.drop(columns = result_df.filter(like = '20').columns.to_list(), inplace = True)
-
 ##### create masks (1 time only)######################3333
 # im = rs.open('landcover_WorldCoverv100_reprojected.tif')
 # landcover= im.read(1)
@@ -28,6 +24,53 @@ result_df.drop(columns = result_df.filter(like = '20').columns.to_list(), inplac
 
 # with open ('landcover_mask.pkl', 'wb') as file:
 #     pickle.dump(landcover, file)
+
+#################################################
+county = input('Input the county to process: ')
+# tif vs df 
+# tif = True 
+
+# if tif: 
+#     infile = './RESULTS/V2/ndvi_results_'+county+'_V2.tif' 
+
+#     with open('landcover_mask.pkl', 'rb') as file:
+#         lc_mask = pickle.load(file)
+
+#     lc_mask = lc_mask <= 40
+#     lc_mask = lc_mask * 1
+
+#     im = rs.open('./RESULTS/V2/ndvi_results_Tharaka_V2.tif')
+#     res= im.read()
+#     res_bands = im.descriptions
+#     meta = im.meta
+#         #remember - rasterio does layers, rows, cols instead of rows, cols, depth 
+#     im.close() 
+
+#     n_layers = len(res_bands)
+
+#     for n in range(n_layers):
+#         layer = res[n, :, :] * lc_mask #single layer masked by landcover 
+
+
+#         meta['count'] = 3
+
+#         with rs.open(fname,"w",**meta) as f:
+#             #python array is row, cols, depth
+#             # rasterio expects band, row, col
+#             #can do a 2d with indexes=1
+#             for b in range(1, n_layers+1):
+
+#                 f.write(array[:,:,b-1], indexes=b)
+#             # set layer descriptions 
+#             f.descriptions=tuple(col_names)
+
+
+# else: 
+infile = 'ndvi_results_'+county+'_V2.csv'
+
+result_df = pd.read_csv(infile)
+result_df.drop(columns = result_df.filter(like = '20').columns.to_list(), inplace = True)
+
 
 #################################################
 # Import masks 
@@ -45,7 +88,7 @@ with open('eco_mask.pkl', 'rb') as file:
 #### landcover 
 #only keeping grassland, shrubland, cropland, and forest
 #which removes built up things, water, etc 
-#too lazy to loop this 
+#this was a dumb way to do it but it worked 
 df_40 = pd.DataFrame(columns = ['row', 'col'], data = np.argwhere(lc_mask == 40))
 df_40['landcover'] = 40
 df_30 = pd.DataFrame(columns = ['row', 'col'], data = np.argwhere(lc_mask == 30))
