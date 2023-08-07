@@ -7,7 +7,6 @@ import pandas as pd
 import numpy as np 
  
 #################################################3
-county = 'Tharaka'
 
 #import the drought classifications####################################33333
 NDMA = pd.read_csv('NDMA_droughts.csv', index_col=0, parse_dates=['Date']) 
@@ -23,75 +22,78 @@ date_plus = pd.date_range(start='5/1/2013', periods=121, freq='MS') #need one th
 
 color_dict = {'Recovery':2, 'Alert':1, 'Alarm':0,'Normal':3}
 CMAP = ListedColormap(['red', 'orange', 'yellow', 'green'])
+#############################################
+county = input('Enter county: ')
+r_range = int(input('Enter approx row: '))
+c_range = int(input('Enter approx col: '))
 
-#################import data
-ndvi_results = pd.read_csv('./RESULTS/ndvi_results_'+county+'.csv',index_col=0)
-ndvi_results = ndvi_results[ndvi_results.loc[:, 'tist']== 1]
+ndvi_results = pd.read_csv('./RESULTS/V2/ndvi_results_'+county+'_V2.csv')
+ndvi_results =ndvi_results.loc[(ndvi_results['row'] <= (r_range +50)) & (ndvi_results['row'] >= (r_range - 50))]
+results =ndvi_results.loc[(ndvi_results['col'] <= (c_range +50)) & (ndvi_results['col'] >= (c_range - 50))]
 
-precip_df = pd.read_csv('precip_pixels_'+county+'.csv') #skiprows=57204, nrows = 1000
+ndvi_res  = pd.read_csv('./RESULTS/V2/ndvi_residuals_'+county+'_V2.csv') 
+ndvi_res =ndvi_res.loc[(ndvi_res['row'] <= (r_range +50)) & (ndvi_res['row'] >= (r_range - 50))]
+ndvi_res =ndvi_res.loc[(ndvi_res['col'] <= (c_range +50)) & (ndvi_res['col'] >= (c_range - 50))]
 
-precip_df = precip_df.loc[ndvi_results.index.to_list(), :]
+# graph lots of things#################################################
+while True: 
+        
+        row = int(input('Row: '))
+        col = int(input('Col: '))
+        
+        results =ndvi_results.loc[(ndvi_results['row'] == row) & (ndvi_results['col'] == col)]
+        res =ndvi_res.loc[(ndvi_res['row'] == row) & (ndvi_res['col'] == col)]
+        sample_result = results.iloc[0, :].filter(like='20')
+        sample_pixel = res.iloc[0, :].filter(like='20')
 
-ndvi_res  = pd.read_csv('ndvi_residuals_'+county+'.csv') 
-ndvi_res = ndvi_res.loc[ndvi_results.index.to_list(), :]
-
-#pick a row to plot
-for row in ndvi_results.index: #since the results has rows deleted
-
-        sample_result = ndvi_results.loc[row, :].filter(like='20')
-        sample_pixel = ndvi_res.loc[row, :].filter(like='20')
-        sample_precip = precip_df.loc[row, :].filter(like='20')
-        if ndvi_results.loc[row, 'tist'] == 1:
+        if results.iloc[0, 2] == 1:
                 tist_tf = 'TIST'
         else:  
                 tist_tf = 'Non-TIST'
 
-        results = ndvi_results.loc[row].filter(like='_')
-        # results.index[0]+'
-        recs = 'r1 = '+str(round(results[0],3))+' Rsq = '+str(round(results[3],2))+'; '+\
-        'r2 = '+str(round(results[1],3))+' Rsq = '+str(round(results[4],2))+'; '+\
-        'r3 = '+str(round(results[2],3))+' Rsq = '+str(round(results[5],2))
+        vals = results.filter(like='_')
+        n_recovs = int(vals.shape[1] / 3) #have recovs, mins, rsq
+        recov_nums = [x[-2:] for x in vals.filter(like='recov').columns.to_list()]
+
+
         ##########Plot ############################
-        fig, (ax1, ax2) = plt.subplots(2, 1, sharex=True, sharey=False)
-        # fig, ax = plt.subplots()
-        ax2.plot(date_list, sample_pixel, 'r*', label='NDVI Residual')
+        
+        fig, ax = plt.subplots(figsize=(9, 6))
+        fig.tight_layout()
+        ax.plot(date_list, sample_pixel, 'r*', label='NDVI Residual')
 
-        # ax1.set_xlabel('month')
-        ax1.set_ylabel('monthly precipitation (mm/mo)' )
-        ax1.set_ylim(0, 700)
-        ax1.bar(x=date_list, height=sample_precip, width=20, label='monthly precip mm')
-        ax2.set_ylabel('NDVI residual')
-        ax2.set_xlabel('date')
-        ax2.set_ylim(-0.3, 0.3)
-        ax2.plot(date_list, sample_result, 'g-', label='Fitted recovery')
-        # fig.legend()
-        ax2.grid(axis='x', which='major')
-        ax1.grid(axis='x', which='major')
+        ax.set_ylim(-0.35, 0.35)
+        ax.plot(date_list, sample_result, 'g-', label='Fitted recovery')
+
+        ax.grid(axis='x', which='major')
+        
+        ax.pcolor(date_plus, ax.get_ylim(), 
+        NDMA[county].map(color_dict).values[np.newaxis], 
+        cmap=CMAP, alpha=0.4, linewidth=0, antialiased = True)
+        
+        ax.set_title('Drought recovery ('+str(row)+\
+                ', '+str(col)+'), '+tist_tf)
+        ax.set_ylabel('NDVI residual')
+
         fig.legend()
-        ax1.pcolor(date_plus, ax1.get_ylim(), 
-                NDMA[county].map(color_dict).values[np.newaxis], 
-                cmap=CMAP, alpha=0.4,
-                linewidth=0, antialiased = True)
-        #lol don't know how to do this to both at once
-        ax2.pcolor(date_plus, ax2.get_ylim(), 
-                NDMA[county].map(color_dict).values[np.newaxis], 
-                cmap=CMAP, alpha=0.4,
-                linewidth=0, antialiased = True)
+        fig.autofmt_xdate()
 
-        fig.autofmt_xdate(which='both')
+        # plt.gcf().text(0.1,0.01, recs, fontsize=10)
+        plt.subplots_adjust(left= 0.1, bottom=0.4)
+        ax.table(cellText = [['%0.2f' %x for x in vals.iloc[0, 0:n_recovs].values], ['%0.2f' %x for x in vals.iloc[0, n_recovs:n_recovs*2].values]],
+                 rowLabels = ['Recovery Rate', 'Rsquared'], 
+                 colLabels = ['Recovery Month %s' % x for x in recov_nums],
+                 loc = 'bottom', bbox=[0.2, -0.5, 0.8, 0.275])
 
-        plt.gcf().text(0.1,0.01, recs, fontsize=10)
-        plt.subplots_adjust(bottom=0.15)
-
-        cbar=fig.colorbar(cm.ScalarMappable(cmap=CMAP), ax=ax1, 
-                        location='top', shrink = 0.5,
-                        pad=0.2,
-                        label='NDMA Drought Status')
+        cbar=fig.colorbar(cm.ScalarMappable(cmap=CMAP), ax=ax, 
+                location='top', shrink = 0.5,
+                pad=0.1,
+                label='NDMA Drought Status')
         cbar.set_ticks([0.12, 0.35, 0.62, 0.87])
         cbar.set_ticklabels(['Alarm', 'Alert', 'Recovery', 'Normal'])
-        fig.suptitle('Example recoveries ('+str(ndvi_results.loc[row, 'row'])+\
-                     ', '+str(ndvi_results.loc[row, 'col'])+'), '+tist_tf)
+
         fig.show()
+        print('x')
         # fig.savefig(county+'_example_recovery_rate.png')
 
 print('donezo')
