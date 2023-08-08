@@ -11,7 +11,9 @@ import seaborn as sb
 ######################################################33
 # import
 county =  'Tharaka'
-res = pd.read_csv('./RESULTS/V2/ndvi_results_w_everything'+county+'.csv', nrows = 1000)
+res = pd.read_csv('./RESULTS/V2/ndvi_results_w_everything'+county+'.csv')
+res.rename(columns={"mean": "mean_res", "stdev": "stdev_res", 'alt':'altitude'}, inplace = True)
+
 
 '''row,col,tist,county,mean,stdev,recov_rate_59,recov_rate_77,
 rsq_59,rsq_77,mins_59,mins_77,
@@ -25,8 +27,9 @@ for x in recov_nums:
     col_name = 'recov_rate_'+x
     new_col_name = 'calc_'+x
     res[new_col_name] = (res[col_name] < 10) #10 is no calc and 15 is no disturbance
+    res[col_name] = res[col_name].abs() # Change the recovery to be positive
 
-cols_to_corr = ['mean_ndvi','stdev_ndvi','alt','mean','stdev']
+cols_to_corr = ['mean_ndvi','stdev_ndvi','altitude','mean_res','stdev_res']
 
 ##################################################################3333
 # Spearmans rank correlation 
