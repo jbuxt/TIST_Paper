@@ -20,22 +20,24 @@ res.rename(columns={"mean": "mean_res", "stdev": "stdev_res", 'alt':'altitude'},
 rsq_59,rsq_77,mins_59,mins_77,
 landcover,eco,mean_ndvi,stdev_ndvi,alt,tist_neighbors, yearly_precip_avg'''
 
-recov_nums = [x[-2:] for x in res.filter(like='recov').columns.to_list()] #strings
-n_recovs = len(recov_nums)
+recov_cols = res.filter(like='recov').columns.to_list()
+# recov_nums = [x[11:] for x in recov_cols #strings
+# n_recovs = len(recov_nums)
 
-# make a bool col for calc
-for x in recov_nums:
-    col_name = 'recov_rate_'+x
-    new_col_name = 'calc_'+x
-    res[new_col_name] = (res[col_name] < 10) #10 is no calc and 15 is no disturbance
-    res[col_name] = res[col_name].abs() # Change the recovery to be positive
+# make a bool col for the ones that are 10 and 15 (no calc and no disturbance)
+# new_col_names = ['not_calc_'+x for x in recov_nums]
+not_calc_mask = res[recov_cols] >= 10
+
+res[recov_cols] = res[recov_cols].abs() # Change the recovery to be positive
+#mask out the 10s and 15s
+res[recov_cols].mask(not_calc_mask, np.nan, inplace= True) #mask replaces values that are True (nan)
 
 cols_to_corr = ['mean_ndvi','stdev_ndvi','altitude','mean_res','stdev_res', 'yearly_precip_avg']
 
 ##################################################################3333
 # Spearmans rank correlation 
 # Do for recovery rates (only ones that have calculated)
-# and for mean/std ndvi, mean/std residual, altitude
+# and for mean/std ndvi, mean/std residual, altitude, and precip (the continuous vars)
 
 # can i also do it for landcover/ecoregion? how? 
 # can i also do it for categorical calc/no calc/no disturbance? 
@@ -43,19 +45,16 @@ cols_to_corr = ['mean_ndvi','stdev_ndvi','altitude','mean_res','stdev_res', 'yea
 
 # f, axs = plt.subplots(1, n_recovs, gridspec_kw=dict(width_ratios=[4, 4]))
 
-for x in recov_nums: 
-    col_name = 'recov_rate_'+x
-    bool_col_name = 'calc_'+x
-    spearmans = res.loc[res[bool_col_name], [col_name]+cols_to_corr].corr(method = 'spearman')
-    print(spearmans)
-    print(x)
-    plt.figure()
-    sb.heatmap(spearmans, vmin=-1.0, vmax=1.0, cmap='PRGn', annot=True, 
-               fmt=".2f")
-    plt.xticks(rotation=45) 
-    plt.yticks(rotation=45) 
-    plt.title('Spearmans Correlation for Recovery '+x+' in '+county)
-    plt.tight_layout()
-    plt.show()
+#ignores nans
+spearmans = res.loc[:, recov_cols+cols_to_corr].corr(method = 'spearman')
+print(spearmans)
+plt.figure()
+sb.heatmap(spearmans, vmin=-1.0, vmax=1.0, cmap='PRGn', annot=True, 
+            fmt=".2f")
+plt.xticks(rotation=45) 
+plt.yticks(rotation=45) 
+plt.title('Spearmans Correlation for Recoveries in '+county)
+plt.tight_layout()
+plt.show()
 
 print('donezo')
