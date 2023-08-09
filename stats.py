@@ -27,10 +27,10 @@ recov_cols = res.filter(like='recov').columns.to_list()
 # make a bool col for the ones that are 10 and 15 (no calc and no disturbance)
 # new_col_names = ['not_calc_'+x for x in recov_nums]
 not_calc_mask = res[recov_cols] >= 10
+#mask out the 10s and 15s
+res[recov_cols] = res[recov_cols].mask(not_calc_mask, np.nan) #mask replaces values that are True (nan)
 
 res[recov_cols] = res[recov_cols].abs() # Change the recovery to be positive
-#mask out the 10s and 15s
-res[recov_cols].mask(not_calc_mask, np.nan, inplace= True) #mask replaces values that are True (nan)
 
 cols_to_corr = ['mean_ndvi','stdev_ndvi','altitude','mean_res','stdev_res', 'yearly_precip_avg']
 
