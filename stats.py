@@ -10,14 +10,15 @@ import seaborn as sb
 
 ######################################################33
 # import
-county =  'Tharaka'
-res = pd.read_csv('./RESULTS/V2/ndvi_results_w_everything'+county+'.csv')
+county = input('Input the county to process: ')
+# county =  'Tharaka'
+res = pd.read_csv('./RESULTS/V2/ndvi_all_results_'+county+'.csv')
 res.rename(columns={"mean": "mean_res", "stdev": "stdev_res", 'alt':'altitude'}, inplace = True)
 
 
 '''row,col,tist,county,mean,stdev,recov_rate_59,recov_rate_77,
 rsq_59,rsq_77,mins_59,mins_77,
-landcover,eco,mean_ndvi,stdev_ndvi,alt,tist_neighbors'''
+landcover,eco,mean_ndvi,stdev_ndvi,alt,tist_neighbors, yearly_precip_avg'''
 
 recov_nums = [x[-2:] for x in res.filter(like='recov').columns.to_list()] #strings
 n_recovs = len(recov_nums)
@@ -29,7 +30,7 @@ for x in recov_nums:
     res[new_col_name] = (res[col_name] < 10) #10 is no calc and 15 is no disturbance
     res[col_name] = res[col_name].abs() # Change the recovery to be positive
 
-cols_to_corr = ['mean_ndvi','stdev_ndvi','altitude','mean_res','stdev_res']
+cols_to_corr = ['mean_ndvi','stdev_ndvi','altitude','mean_res','stdev_res', 'yearly_precip_avg']
 
 ##################################################################3333
 # Spearmans rank correlation 
