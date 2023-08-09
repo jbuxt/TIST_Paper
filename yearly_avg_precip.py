@@ -14,7 +14,7 @@ pix= pd.read_csv(pix_file)
 
 yearly = pix.iloc[:, 4:].sum(axis = 1).astype('float16') / 10  #sum the monthly rainfall then divide by number of years 
 
-precip = pd.concat([pix.loc[:, ['row', 'col']], yearly.rename('yearly_precip_avg')], axis = 1)
+precip = pd.concat([pix.loc[:, ['row', 'col']], yearly.rename('yearly_precip')], axis = 1)
 
 #add to results 
 # result_df = pd.read_csv(infile)
