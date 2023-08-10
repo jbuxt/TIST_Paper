@@ -24,38 +24,40 @@ landcover,eco,mean_ndvi,stdev_ndvi,alt,tist_neighbors, yearly_precip_avg'''
 recov_cols = res.filter(like='recov').columns.to_list()
 recov_nums = [x[11:] for x in recov_cols] #strings
 n_recovs = len(recov_nums)
-# new_col_names = ['cat_'+x for x in recov_nums]
+new_col_names = ['cat_'+x for x in recov_nums]
 
-# ## assign categories for each recovery column 
-# res[new_col_names] = 'calc'
-# for n in range(n_recovs):
-#     x = recov_cols[n]
-#     y = new_col_names[n]
-#     res.loc[(res[x] == 10.0), y] = 'no_calc'
-#     res.loc[(res[x] == 15.0), y] = 'no_disturb'
-#     res.loc[(res[x].isna()), y] = 'null'
+## assign categories for each recovery column 
+res[new_col_names] = 'calc'
+for n in range(n_recovs):
+    x = recov_cols[n]
+    y = new_col_names[n]
+    res.loc[(res[x] == 10.0), y] = 'no_calc'
+    res.loc[(res[x] == 15.0), y] = 'no_disturb'
+    res.loc[(res[x].isna()), y] = 'null'
+
+# get tist and neighbors into same group 
+res['tist_TF'] = res['tist_neighbors'] > 0 #true is TIST and neighbors
 
 ##############################################33
 # mask the 10s and 15s 
 
-not_calc_mask = res[recov_cols] >= 10
-#mask out the 10s and 15s
-res[recov_cols] = res[recov_cols].mask(not_calc_mask, np.nan) #mask replaces values that are True (nan)
+# not_calc_mask = res[recov_cols] >= 10
+# #mask out the 10s and 15s
+# res[recov_cols] = res[recov_cols].mask(not_calc_mask, np.nan) #mask replaces values that are True (nan)
 
-res[recov_cols] = res[recov_cols].abs() # Change the recovery to be positive
+# res[recov_cols] = res[recov_cols].abs() # Change the recovery to be positive
 
-# cols_to_corr = ['mean_ndvi','stdev_ndvi','altitude','mean_res','stdev_res', 'yearly_precip_avg']
+
 
 ##################################################################3333
 # Spearmans rank correlation 
 # Do for recovery rates (only ones that have calculated)
 # and for mean/std ndvi, mean/std residual, altitude, and precip (the continuous vars)
 
-# can i also do it for landcover/ecoregion? how? 
-# can i also do it for categorical calc/no calc/no disturbance? 
-# do i want this separated by county? i think yes that's fine 
 
 # f, axs = plt.subplots(1, n_recovs, gridspec_kw=dict(width_ratios=[4, 4]))
+
+# cols_to_corr = ['mean_ndvi','stdev_ndvi','altitude','mean_res','stdev_res', 'yearly_precip_avg']
 
 #ignores nans
 # spearmans = res.loc[:, recov_cols+cols_to_corr].corr(method = 'spearman')
@@ -101,7 +103,7 @@ res[recov_cols] = res[recov_cols].abs() # Change the recovery to be positive
 # need to get rid of the montane moorlands anyways - not super applicable here and is just going to mess with it 
 # and also the null values 
 
-# for y in ['eco', 'landcover']:
+# for y in ['tist_TF']: #also 'eco' and 'landcover'
 #     for x in new_col_names:
 #         print(y, x)
 #         cross = pd.crosstab(res.loc[res[x] != 'null', x], res.loc[res[x] != 'null', y])
@@ -119,50 +121,69 @@ res[recov_cols] = res[recov_cols].abs() # Change the recovery to be positive
 # basically is wilcoxon rank-sum/mann-whitney U for more than 2 groups
 #scipy.stats.kruskal(*samples, nan_policy='propagate', axis=0, keepdims=False)
 #using this for the recovery rate vs. cat variables like landcover, eco, TIST/non tist 
+# also using to look at the continuous IVs vs cat outcome of calc/no calc/no dist 
 
 # be sure to uncomment the masking of 10s and 15s at the top 
+# if looking at recovery rate distributions
 
-y = 'eco' # effetively 2 types - ignore the moorlands 
-for x in recov_cols:
-    print(y, x)
-    # separate into samples 
-    # 8 and 51
-    r1 = res.loc[(res[y] == 8), x]
-    r2 = res.loc[(res[y] == 51), x]
-    # print the medians as well 
-    print('Median of Forest: {:.2f}, Median of Bushland: {:.2f}'.format(r1.median(skipna = True), r2.median(skipna = True)))
+# y = 'eco' # effetively 2 types - ignore the moorlands 
+# for x in recov_cols:
+#     print(y, x)
+#     # separate into samples 
+#     # 8 and 51
+#     r1 = res.loc[(res[y] == 8), x]
+#     r2 = res.loc[(res[y] == 51), x]
+#     # print the medians as well 
+#     print('Median of Forest: {:.2f}, Median of Bushland: {:.2f}'.format(r1.median(skipna = True), r2.median(skipna = True)))
 
-    # get rid of the null values as they are not applicable 
-    h, p = stats.kruskal(r1, r2, nan_policy = 'omit')
-    print('H stat: {:.1f}, pvalue: {}'.format(h, p))
+#     # get rid of the null values as they are not applicable 
+#     h, p = stats.kruskal(r1, r2, nan_policy = 'omit')
+#     print('H stat: {:.1f}, pvalue: {}'.format(h, p))
 
-y = 'landcover' # 4 types
-for x in recov_cols:
-    print(y, x)
-    # separate into samples 
-    #10, 20, 30, 40
-    r1 = res.loc[(res[y] == 10), x] #trees
-    r2 = res.loc[(res[y] == 20), x] #shrubs
-    r3 = res.loc[(res[y] == 30), x] # grass
-    r4 = res.loc[(res[y] == 40), x] #crops
-    print('Median of Trees: {:.2f}, Median of Shrubs: {:.2f}, Median of Grass: {:.2f}, Median of Crops: {:.2f}'.format(r1.median(skipna = True), 
-                                                            r2.median(skipna = True),
-                                                            r3.median(skipna=True), 
-                                                            r4.median(skipna = True)))
-    #ignore nan values 
-    h, p = stats.kruskal(r1, r2, r3, r4, nan_policy = 'omit')
-    print('H stat: {:.1f}, pvalue: {}'.format(h, p))
+# y = 'landcover' # 4 types
+# for x in recov_cols:
+#     print(y, x)
+#     # separate into samples 
+#     #10, 20, 30, 40
+#     r1 = res.loc[(res[y] == 10), x] #trees
+#     r2 = res.loc[(res[y] == 20), x] #shrubs
+#     r3 = res.loc[(res[y] == 30), x] # grass
+#     r4 = res.loc[(res[y] == 40), x] #crops
+#     print('Median of Trees: {:.2f}, Median of Shrubs: {:.2f}, Median of Grass: {:.2f}, Median of Crops: {:.2f}'.format(r1.median(skipna = True), 
+#                                                             r2.median(skipna = True),
+#                                                             r3.median(skipna=True), 
+#                                                             r4.median(skipna = True)))
+#     #ignore nan values 
+#     h, p = stats.kruskal(r1, r2, r3, r4, nan_policy = 'omit')
+#     print('H stat: {:.1f}, pvalue: {}'.format(h, p))
 
-y = 'tist_neighbors' # calling this 2 types - group TIST and 'neighbors' together types
-for x in recov_cols:
-    print(y, x)
-    # separate into samples 
-    #0 vs 1/2
-    r1 = res.loc[(res[y] == 0), x]
-    r2 = res.loc[(res[y] > 0), x]
-    print('Median of Non-Tist: {:.2f}, Median of Tist/Neighbors: {:.2f}'.format(r1.median(skipna = True), r2.median(skipna = True)))
-    #ignore nan values 
-    h, p = stats.kruskal(r1, r2, nan_policy = 'omit')
-    print('H stat: {:.1f}, pvalue: {}'.format(h, p))
+# y = 'tist_neighbors' # calling this 2 types - group TIST and 'neighbors' together types
+# for x in recov_cols:
+#     print(y, x)
+#     # separate into samples 
+#     #0 vs 1/2
+#     r1 = res.loc[(res[y] == 0), x]
+#     r2 = res.loc[(res[y] > 0), x]
+#     print('Median of Non-Tist: {:.2f}, Median of Tist/Neighbors: {:.2f}'.format(r1.median(skipna = True), r2.median(skipna = True)))
+#     #ignore nan values 
+#     h, p = stats.kruskal(r1, r2, nan_policy = 'omit')
+#     print('H stat: {:.1f}, pvalue: {}'.format(h, p))
+
+#############################
+cols_to_corr = ['mean_ndvi','stdev_ndvi','altitude','mean_res','stdev_res', 'yearly_precip_avg']
+
+for y in new_col_names: #the categorical columns of calc/no calc/no dist
+    for x in cols_to_corr:
+        print(y, x)
+        # separate into samples 
+        r1 = res.loc[(res[y] == 'calc'), x]
+        r2 = res.loc[(res[y] =='no_calc'), x]
+        r3 = res.loc[(res[y] =='no_disturb'), x]
+        print('Median of Calc: {:.2f}, Median of No Disturb: {:.2f}, Median of No Calc: {:.2f}'.format(r1.median(skipna = True), 
+                                                                                                       r3.median(skipna = True),
+                                                                                                       r2.median(skipna = True)))
+        #ignore nan values 
+        h, p = stats.kruskal(r1, r2, nan_policy = 'omit')
+        print('H stat: {:.1f}, pvalue: {:0.3f}'.format(h, p))
 
 print('donezo')
