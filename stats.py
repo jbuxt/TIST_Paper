@@ -112,13 +112,13 @@ res['tist_TF'] = res['tist_neighbors'] > 0 #true is TIST and neighbors
 #         chi2, p, dof, ex = stats.chi2_contingency(cross)
 #         print('Chi2: {}, pvalue: {}, dof: {}'.format(chi2, p, dof))
 
-for y in ['tist_TF']: 
-    for x in ['eco', 'landcover']:
-        print(y, x)
-        cross = pd.crosstab(res[x], res[y])
-        print(cross)
-        chi2, p, dof, ex = stats.chi2_contingency(cross)
-        print('Chi2: {:.1f}, pvalue: {:.3f}, dof: {}'.format(chi2, p, dof))
+# for y in ['tist_TF']: 
+#     for x in ['eco', 'landcover']:
+#         print(y, x)
+#         cross = pd.crosstab(res[x], res[y])
+#         print(cross)
+#         chi2, p, dof, ex = stats.chi2_contingency(cross)
+#         print('Chi2: {:.1f}, pvalue: {:.3f}, dof: {}'.format(chi2, p, dof))
 
 ################################################################################
 #Kruskal - Wallace H test 
