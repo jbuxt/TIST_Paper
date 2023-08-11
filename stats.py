@@ -26,14 +26,14 @@ recov_nums = [x[11:] for x in recov_cols] #strings
 n_recovs = len(recov_nums)
 new_col_names = ['cat_'+x for x in recov_nums]
 
-## assign categories for each recovery column 
-# res[new_col_names] = 'calc'
-# for n in range(n_recovs):
-#     x = recov_cols[n]
-#     y = new_col_names[n]
-#     res.loc[(res[x] == 10.0), y] = 'no_calc'
-#     res.loc[(res[x] == 15.0), y] = 'no_disturb'
-#     res.loc[(res[x].isna()), y] = 'null'
+# assign categories for each recovery column 
+res[new_col_names] = 'calc'
+for n in range(n_recovs):
+    x = recov_cols[n]
+    y = new_col_names[n]
+    res.loc[(res[x] == 10.0), y] = 'no_calc'
+    res.loc[(res[x] == 15.0), y] = 'no_disturb'
+    res.loc[(res[x].isna()), y] = 'null'
 
 # get tist and neighbors into same group 
 res['tist_TF'] = res['tist_neighbors'] > 0 #true is TIST and neighbors
@@ -177,21 +177,23 @@ for y in ['tist_TF']:
 #     print('H stat: {:.1f}, pvalue: {}'.format(h, p))
 
 #############################
-# cols_to_corr = ['mean_ndvi','stdev_ndvi','altitude','mean_res','stdev_res', 'yearly_precip_avg']
 
-# for y in new_col_names: #the categorical columns of calc/no calc/no dist
-#     for x in cols_to_corr:
-#         print(y, x)
-#         # separate into samples 
-#         r1 = res.loc[(res[y] == 'calc'), x]
-#         r2 = res.loc[(res[y] =='no_calc'), x]
-#         r3 = res.loc[(res[y] =='no_disturb'), x]
-#         print('Median of Calc: {:.2f}, Median of No Disturb: {:.2f}, Median of No Calc: {:.2f}'.format(r1.median(skipna = True), 
-#                                                                                                        r3.median(skipna = True),
-#                                                                                                        r2.median(skipna = True)))
-#         #ignore nan values 
-#         h, p = stats.kruskal(r1, r2, nan_policy = 'omit')
-#         print('H stat: {:.1f}, pvalue: {:0.3f}'.format(h, p))
+# MUST REDO THIS 
+cols_to_corr = ['mean_ndvi','stdev_ndvi','altitude','mean_res','stdev_res', 'yearly_precip_avg']
+
+for y in new_col_names: #the categorical columns of calc/no calc/no dist
+    for x in cols_to_corr:
+        print(y, x)
+        # separate into samples 
+        r1 = res.loc[(res[y] == 'calc'), x]
+        r2 = res.loc[(res[y] =='no_calc'), x]
+        r3 = res.loc[(res[y] =='no_disturb'), x]
+        print('Median of Calc: {:.2f}, Median of No Disturb: {:.2f}, Median of No Calc: {:.2f}'.format(r1.median(skipna = True), 
+                                                                                                       r3.median(skipna = True),
+                                                                                                       r2.median(skipna = True)))
+        #ignore nan values 
+        h, p = stats.kruskal(r1, r2, r3, nan_policy = 'omit')
+        print('H stat: {:.1f}, pvalue: {:0.3f}'.format(h, p))
 #########################################
 # cols_to_corr = ['mean_ndvi','stdev_ndvi','altitude','mean_res','stdev_res', 'yearly_precip_avg']
 
@@ -207,5 +209,32 @@ for y in ['tist_TF']:
 #         #ignore nan values 
 #         h, p = stats.kruskal(r1, r2, nan_policy = 'omit')
 #         print('H stat: {:.1f}, pvalue: {:0.3f}'.format(h, p))
+
+##############################################
+## Recovery rate compared by county, recovery, and landcover type between TIST/neighbors/other
+
+# mask the 10s and 15s 
+
+not_calc_mask = res[recov_cols] >= 10
+#mask out the 10s and 15s
+res[recov_cols] = res[recov_cols].mask(not_calc_mask, np.nan) #mask replaces values that are True (nan)
+
+res[recov_cols] = res[recov_cols].abs() # Change the recovery to be positive
+
+y = 'tist_neighbors' #the categorical column 
+for x in recov_cols:
+    for z in [10, 20, 30, 40]: #landcover types
+        print(y, x, z)
+        # separate into samples 
+        r1 = res.loc[((res[y] == 0) & (res['landcover'] == z)), x] #other
+        r2 = res.loc[((res[y] == 1) & (res['landcover'] == z)), x] #neighbors 
+        r3 = res.loc[((res[y] == 2) & (res['landcover'] == z)), x] #neighbors 
+
+        print('Median of Other: {:.2f}, Median of Neighbors: {:.2f}, Median of TIST: {:.2f}'.format(r1.median(skipna = True), 
+                                                                            r2.median(skipna = True),
+                                                                            r3.median(skipna = True)))
+        #ignore nan values 
+        h, p = stats.kruskal(r1, r2, r3, nan_policy = 'omit')
+        print('H stat: {:.1f}, pvalue: {:0.3f}'.format(h, p))
 
 print('donezo')
