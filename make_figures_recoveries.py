@@ -53,30 +53,44 @@ while True:
 
         vals = results.filter(like='_')
         n_recovs = int(vals.shape[1] / 3) #have recovs, mins, rsq
-        recov_nums = [x[-2:] for x in vals.filter(like='recov').columns.to_list()]
+        recov_nums = [x[11:] for x in vals.filter(like='recov').columns.to_list()]
 
+        recovs= [int(x) for x in recov_nums]
+        starts = [x-5 for x in recovs]
+        stops = [x +6 for x in recovs]
+        # convert to date time for plot
 
-        ##########Plot ############################
+        start_dates = [pd.to_datetime('05-01-2013')+pd.DateOffset(months = x) for x in starts]
+        stop_dates = [pd.to_datetime('05-01-2013')+pd.DateOffset(months = x) for x in stops]
         
         fig, ax = plt.subplots(figsize=(9, 6))
         fig.tight_layout()
-        ax.plot(date_list, sample_pixel, 'r*', label='NDVI Residual')
 
-        ax.set_ylim(-0.35, 0.35)
+        ax.set_ylim(min(sample_pixel)-0.02, max(sample_pixel)+0.02)
+        
+        ax.plot(date_list, sample_pixel, color = 'black', marker = 'o', label='NDVI Residual')
+        
+ #start date of the whole thing
+
+        
         ax.plot(date_list, sample_result, 'g-', label='Fitted recovery')
 
-        ax.grid(axis='x', which='major')
+        ax.grid(axis='x', which='both')
         
         ax.pcolor(date_plus, ax.get_ylim(), 
-        NDMA[county].map(color_dict).values[np.newaxis], 
-        cmap=CMAP, alpha=0.4, linewidth=0, antialiased = True)
+                NDMA[county].map(color_dict).values[np.newaxis], 
+                cmap=CMAP, alpha=0.4, linewidth=0.1, antialiased = True)
         
+        plt.vlines(start_dates, ax.get_ylim()[0], ax.get_ylim()[1], color = 'blue',
+                   label='Potential recov. starts', linewidth=1)
+        plt.vlines(stop_dates, ax.get_ylim()[0], ax.get_ylim()[1], color = 'navy',
+                   label='Potential recov. stops', linewidth=1)
         ax.set_title('Drought recovery ('+str(row)+\
                 ', '+str(col)+'), '+tist_tf)
         ax.set_ylabel('NDVI residual')
 
         fig.legend()
-        fig.autofmt_xdate()
+        # fig.autofmt_xdate(which='both') #change to major for years only
 
         # plt.gcf().text(0.1,0.01, recs, fontsize=10)
         plt.subplots_adjust(left= 0.1, bottom=0.4)
@@ -87,7 +101,7 @@ while True:
 
         cbar=fig.colorbar(cm.ScalarMappable(cmap=CMAP), ax=ax, 
                 location='top', shrink = 0.5,
-                pad=0.1,
+                pad=0.1, alpha=0.4, 
                 label='NDMA Drought Status')
         cbar.set_ticks([0.12, 0.35, 0.62, 0.87])
         cbar.set_ticklabels(['Alarm', 'Alert', 'Recovery', 'Normal'])
