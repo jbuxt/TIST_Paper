@@ -2,7 +2,7 @@
 
 import matplotlib.pyplot as plt 
 import matplotlib.cm as cm
-from matplotlib.colors import ListedColormap
+from matplotlib.colors import ListedColormap, BoundaryNorm
 import pandas as pd
 import numpy as np 
  
@@ -22,6 +22,8 @@ date_plus = pd.date_range(start='5/1/2013', periods=121, freq='MS') #need one th
 
 color_dict = {'Recovery':2, 'Alert':1, 'Alarm':0,'Normal':3}
 CMAP = ListedColormap(['red', 'orange', 'yellow', 'green'])
+bounds=[0,1,2,3]
+norm = BoundaryNorm(bounds, CMAP.N)
 #############################################
 county = input('Enter county: ')
 r_range = int(input('Enter approx row: '))
@@ -66,24 +68,20 @@ while True:
         fig, ax = plt.subplots(figsize=(9, 6))
         fig.tight_layout()
 
-        ax.set_ylim(min(sample_pixel)-0.02, max(sample_pixel)+0.02)
+        ax.set_ylim(sample_pixel.min()-0.02, sample_pixel.max()+0.02)
+        ax.plot(date_list, sample_pixel, 'k*', label='NDVI Residual')
         
-        ax.plot(date_list, sample_pixel, color = 'black', marker = 'o', label='NDVI Residual')
-        
- #start date of the whole thing
-
-        
+        #start date of the whole thing
         ax.plot(date_list, sample_result, 'g-', label='Fitted recovery')
-
         ax.grid(axis='x', which='both')
         
         ax.pcolor(date_plus, ax.get_ylim(), 
                 NDMA[county].map(color_dict).values[np.newaxis], 
-                cmap=CMAP, alpha=0.4, linewidth=0.1, antialiased = True)
+                cmap=CMAP, norm=norm, alpha=0.4, linewidth=0.1, antialiased = True)
         
         plt.vlines(start_dates, ax.get_ylim()[0], ax.get_ylim()[1], color = 'blue',
                    label='Potential recov. starts', linewidth=1)
-        plt.vlines(stop_dates, ax.get_ylim()[0], ax.get_ylim()[1], color = 'navy',
+        plt.vlines(stop_dates, ax.get_ylim()[0], ax.get_ylim()[1], color = 'purple',
                    label='Potential recov. stops', linewidth=1)
         ax.set_title('Drought recovery ('+str(row)+\
                 ', '+str(col)+'), '+tist_tf)
