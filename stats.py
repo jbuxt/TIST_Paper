@@ -41,38 +41,37 @@ res['tist_TF'] = res['tist_neighbors'] > 0 #true is TIST and neighbors
 ##############################################33
 # mask the 10s and 15s 
 
-# not_calc_mask = res[recov_cols] >= 10
-# #mask out the 10s and 15s
-# res[recov_cols] = res[recov_cols].mask(not_calc_mask, np.nan) #mask replaces values that are True (nan)
+not_calc_mask = res[recov_cols] >= 10
+#mask out the 10s and 15s
+res[recov_cols] = res[recov_cols].mask(not_calc_mask, np.nan) #mask replaces values that are True (nan)
 
-# res[recov_cols] = res[recov_cols].abs() # Change the recovery to be positive
+res[recov_cols] = res[recov_cols].abs() # Change the recovery to be positive
 
 
 
 ##################################################################3333
 # Spearmans rank correlation 
 # Do for recovery rates (only ones that have calculated)
-# and for mean/std ndvi, mean/std residual, altitude, and precip (the continuous vars)
+# and for mean/std ndvi, mean/std residual, altitude, and precip and percent missing (the continuous vars)
+#MAKE SURE 10s and 15s masked and have positive recov rates 
 
 
-# f, axs = plt.subplots(1, n_recovs, gridspec_kw=dict(width_ratios=[4, 4]))
+cols_to_corr = ['mean_ndvi','stdev_ndvi','altitude','mean_res','stdev_res', 'yearly_precip_avg', 'pct_missing']
 
-# cols_to_corr = ['mean_ndvi','stdev_ndvi','altitude','mean_res','stdev_res', 'yearly_precip_avg']
-
-#ignores nans
-# spearmans = res.loc[:, recov_cols+cols_to_corr].corr(method = 'spearman')
+# ##ignores nans
+spearmans = res.loc[:, recov_cols+cols_to_corr].corr(method = 'spearman')
 # print(spearmans)
-# plt.figure()
-# sb.heatmap(spearmans, vmin=-1.0, vmax=1.0, cmap='PRGn', annot=True, 
-#             fmt=".2f")
-# plt.xticks(rotation=45) 
-# plt.yticks(rotation=45) 
-# plt.title('Spearmans Correlation for Recoveries in '+county)
-# plt.tight_layout()
-# plt.show()
+plt.figure()
+sb.heatmap(spearmans, vmin=-1.0, vmax=1.0, cmap='PRGn', annot=True, 
+            fmt=".2f")
+plt.xticks(rotation=90) 
+plt.yticks(rotation=0) 
+plt.title('Spearmans Correlation for Recoveries in '+county)
+plt.tight_layout()
+plt.show()
 
 
-# spearmanr = stats.spearmanr(res.loc[:, recov_cols+cols_to_corr], nan_policy = 'omit')
+spearmanr = stats.spearmanr(res.loc[:, recov_cols+cols_to_corr], nan_policy = 'omit')
 
 # plt.figure()
 # sb.heatmap(spearmanr.statistic, vmin=-1.0, vmax=1.0, cmap='PRGn', annot=True, 
@@ -83,15 +82,17 @@ res['tist_TF'] = res['tist_neighbors'] > 0 #true is TIST and neighbors
 # plt.tight_layout()
 # plt.show()
 
-# plt.figure()
+plt.figure()
 
-# sb.heatmap(spearmanr.pvalue, vmin=0, vmax=1.0, cmap='Greens', annot=True, 
-#             fmt=".2f")
-# plt.xticks(rotation=45) 
-# plt.yticks(rotation=45) 
-# plt.title('PValues from SciPy for Recoveries in '+county)
-# plt.tight_layout()
-# plt.show()
+sb.heatmap(spearmanr.pvalue, vmin=0, vmax=1.0, cmap='Greens', annot=True, 
+            fmt=".2f")
+plt.xticks(rotation=90) 
+plt.yticks(rotation=0) 
+plt.title('PValues from SciPy for Recoveries in '+county)
+plt.tight_layout()
+plt.show()
+
+
 ###############################################################################
 # Chi squared test of independence
 # use for categorical influence on categorical: so landcover and eco on calc/no calc/no disturbance 
