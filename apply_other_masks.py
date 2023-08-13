@@ -82,15 +82,31 @@ result_df = pd.read_csv(infile)
 
 ################
 # #missing
-im = rs.open('./RESULTS/Missing/ndvi_missing_'+county+'.tif')
-miss_array= im.read(1) # band 1 is percent missing, band 2 is longest misisng streak 
-plt.imshow(miss_array)
+# im = rs.open('./RESULTS/Missing/ndvi_missing_'+county+'.tif')
+# miss_array= im.read(1) # band 1 is percent missing, band 2 is longest misisng streak 
+# plt.imshow(miss_array)
+# im.close()
+
+# # relevant values 
+# result_df['pct_missing'] = miss_array[result_df['row'], result_df['col']]
+
+
+#############################################################
+## human land modification gradient
+im = rs.open('human_mod.tif')
+humans= im.read(1) # only one band, in int16, scale is 0 = no mod, 10,000 is all the humans
+plt.imshow(humans)
 im.close()
 
+#because it came with 2 extra rows and one extra column thanks to some imperfection in roi 
+# #checked which rows were extra in qgis
+# #now the indexes match up 
+humans = np.delete(humans, [0, -1], 0) # delete first and last row
+humans = np.delete(humans, 0, 1) #delete first column
+
 # relevant values 
-result_df['pct_missing'] = miss_array[result_df['row'], result_df['col']]
-
+result_df['human_mod'] = humans[result_df['row'], result_df['col']]
 ################## save
-result_df.to_csv('ndvi_all_results_'+county+'.csv', encoding='utf-8', index=False)
+result_df.to_csv(infile, encoding='utf-8', index=False)
 
-print('add mean ndvi, alt, and tist neighbors for '+county)                   
+print('added mean ndvi, alt, pct missing, human modification, and tist neighbors for '+county)                   
