@@ -1,4 +1,4 @@
-#make nice graphs of recoveries 
+#make nice graphs of recoveries for specific pixels if you know row, col 
 
 import matplotlib.pyplot as plt 
 import matplotlib.cm as cm
@@ -22,7 +22,7 @@ date_plus = pd.date_range(start='5/1/2013', periods=121, freq='MS') #need one th
 
 color_dict = {'Recovery':2, 'Alert':1, 'Alarm':0,'Normal':3}
 CMAP = ListedColormap(['red', 'orange', 'yellow', 'green'])
-bounds=[0,1,2,3]
+bounds=[0,1,2,3,4]
 norm = BoundaryNorm(bounds, CMAP.N)
 #############################################
 county = input('Enter county: ')
