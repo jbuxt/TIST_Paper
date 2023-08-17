@@ -13,7 +13,7 @@ from df_to_map import df_to_map
 
 # get neighboring tist #######################
 final = pd.DataFrame()
-for county in ['Tharaka', 'Meru', 'Nyeri', 'Meru']:
+for county in ['Tharaka', 'Meru', 'Nyeri', 'Embu']:
 
     infile = './RESULTS/V2/ndvi_all_results_'+county+'.csv'
     result_df = pd.read_csv(infile)

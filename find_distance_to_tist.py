@@ -47,7 +47,7 @@ dists = dists * 30
 
 # SAVE To result csvs############################# 
 
-for county in ['Embu']: #['Tharaka', 'Meru', 'Nyeri', 'Meru']:
+for county in ['Tharaka', 'Meru', 'Nyeri', 'Embu']:
 
     infile = './RESULTS/V2/ndvi_all_results_'+county+'.csv'
     result_df = pd.read_csv(infile)
