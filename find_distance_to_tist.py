@@ -31,23 +31,23 @@ dists = dists * 30
 # plt.show()
 
 # save for maps ##############################
-with open('veg_meta.pkl', 'rb') as file:
-    veg_meta, veg_bounds = pickle.load(file)
+# with open('veg_meta.pkl', 'rb') as file:
+#     veg_meta, veg_bounds = pickle.load(file)
 
-tist_meta = veg_meta
-tist_meta['dtype'] = 'float32'
-tist_meta['count'] = 1
+# tist_meta = veg_meta
+# tist_meta['dtype'] = 'float32'
+# tist_meta['count'] = 1
 
-with rs.open('tist_distance.tif',"w", **tist_meta) as f:
-    #python array is row, cols, depth
-    # rasterio expects band, row, col
-    #can do a 2d with indexes=1
-    f.write(dists, indexes=1)
-    # set layer descriptions 
+# with rs.open('tist_distance.tif',"w", **tist_meta) as f:
+#     #python array is row, cols, depth
+#     # rasterio expects band, row, col
+#     #can do a 2d with indexes=1
+#     f.write(dists, indexes=1)
+#     # set layer descriptions 
 
 # SAVE To result csvs############################# 
 
-for county in ['Tharaka', 'Meru', 'Nyeri', 'Meru']:
+for county in ['Embu']: #['Tharaka', 'Meru', 'Nyeri', 'Meru']:
 
     infile = './RESULTS/V2/ndvi_all_results_'+county+'.csv'
     result_df = pd.read_csv(infile)
