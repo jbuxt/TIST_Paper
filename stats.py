@@ -1,4 +1,4 @@
-# do some statistical comparison
+# do some statistical comparisons
 # boy howdy do i wish i'd made the leap to jupyter or other notebook but i haven't so here we are
 
 import matplotlib.pyplot as plt 
@@ -8,6 +8,7 @@ import pandas as pd
 import numpy as np 
 import seaborn as sb
 from scipy import stats
+from scikit_posthocs import posthoc_dunn
 
 ######################################################33
 # import
@@ -21,10 +22,17 @@ res.rename(columns={"mean": "mean_res", "stdev": "stdev_res", 'alt':'altitude'},
 rsq_59,rsq_77,mins_59,mins_77,
 landcover,eco,mean_ndvi,stdev_ndvi,alt,tist_neighbors, yearly_precip_avg'''
 
-recov_cols = res.filter(like='recov').columns.to_list()
+# recov_cols = res.filter(like='recov').columns.to_list()
+# recov_nums = [x[11:] for x in recov_cols] #strings
+# n_recovs = len(recov_nums)
+# new_col_names = ['cat_'+x for x in recov_nums]
+
+# only focusing on 59 and 77
+recov_cols = ['recov_rate_59', 'recov_rate_77']
 recov_nums = [x[11:] for x in recov_cols] #strings
 n_recovs = len(recov_nums)
 new_col_names = ['cat_'+x for x in recov_nums]
+
 
 # assign categories for each recovery column 
 res[new_col_names] = 'calc'
@@ -36,7 +44,7 @@ for n in range(n_recovs):
     res.loc[(res[x].isna()), y] = 'null'
 
 # get tist and neighbors into same group 
-res['tist_TF'] = res['tist_neighbors'] > 0 #true is TIST and neighbors
+# res['tist_TF'] = res['tist_neighbors'] > 0 #true is TIST and neighbors
 
 ##############################################33
 # mask the 10s and 15s 
@@ -47,8 +55,6 @@ res[recov_cols] = res[recov_cols].mask(not_calc_mask, np.nan) #mask replaces val
 
 res[recov_cols] = res[recov_cols].abs() # Change the recovery to be positive
 
-
-
 ##################################################################3333
 # Spearmans rank correlation 
 # Do for recovery rates (only ones that have calculated)
@@ -56,22 +62,22 @@ res[recov_cols] = res[recov_cols].abs() # Change the recovery to be positive
 #MAKE SURE 10s and 15s masked and have positive recov rates 
 
 
-cols_to_corr = ['mean_ndvi','stdev_ndvi','altitude','mean_res','stdev_res', 'yearly_precip_avg', 'pct_missing']
+# cols_to_corr = ['mean_ndvi','stdev_ndvi','altitude','mean_res','stdev_res', 'yearly_precip_avg', 'pct_missing']
 
-# ##ignores nans
-spearmans = res.loc[:, recov_cols+cols_to_corr].corr(method = 'spearman')
-# print(spearmans)
-plt.figure()
-sb.heatmap(spearmans, vmin=-1.0, vmax=1.0, cmap='PRGn', annot=True, 
-            fmt=".2f")
-plt.xticks(rotation=90) 
-plt.yticks(rotation=0) 
-plt.title('Spearmans Correlation for Recoveries in '+county)
-plt.tight_layout()
-plt.show()
+# # ##ignores nans
+# spearmans = res.loc[:, recov_cols+cols_to_corr].corr(method = 'spearman')
+# # print(spearmans)
+# plt.figure()
+# sb.heatmap(spearmans, vmin=-1.0, vmax=1.0, cmap='PRGn', annot=True, 
+#             fmt=".2f")
+# plt.xticks(rotation=90) 
+# plt.yticks(rotation=0) 
+# plt.title('Spearmans Correlation for Recoveries in '+county)
+# plt.tight_layout()
+# plt.show()
 
 
-spearmanr = stats.spearmanr(res.loc[:, recov_cols+cols_to_corr], nan_policy = 'omit')
+# spearmanr = stats.spearmanr(res.loc[:, recov_cols+cols_to_corr], nan_policy = 'omit')
 
 # plt.figure()
 # sb.heatmap(spearmanr.statistic, vmin=-1.0, vmax=1.0, cmap='PRGn', annot=True, 
@@ -82,15 +88,15 @@ spearmanr = stats.spearmanr(res.loc[:, recov_cols+cols_to_corr], nan_policy = 'o
 # plt.tight_layout()
 # plt.show()
 
-plt.figure()
+# plt.figure()
 
-sb.heatmap(spearmanr.pvalue, vmin=0, vmax=1.0, cmap='Greens', annot=True, 
-            fmt=".2f")
-plt.xticks(rotation=90) 
-plt.yticks(rotation=0) 
-plt.title('PValues from SciPy for Recoveries in '+county)
-plt.tight_layout()
-plt.show()
+# sb.heatmap(spearmanr.pvalue, vmin=0, vmax=1.0, cmap='Greens', annot=True, 
+#             fmt=".2f")
+# plt.xticks(rotation=90) 
+# plt.yticks(rotation=0) 
+# plt.title('PValues from SciPy for Recoveries in '+county)
+# plt.tight_layout()
+# plt.show()
 
 
 ###############################################################################
@@ -128,6 +134,9 @@ plt.show()
 # equivalence of medians (which yeah - the recovery rates have a similar shape and scale)
 # basically is wilcoxon rank-sum/mann-whitney U for more than 2 groups
 #scipy.stats.kruskal(*samples, nan_policy='propagate', axis=0, keepdims=False)
+# use Dunn's post hoc for pairwise comparisons after the fact 
+#  scikit_posthocs.posthoc_dunn(a: Union[list, ndarray, DataFrame], val_col: Optional[str] = None, 
+                            #   group_col: Optional[str] = None, p_adjust: Optional[str] = None, sort: bool = True) → DataFrame
 #using this for the recovery rate vs. cat variables like landcover, eco, TIST/non tist 
 # also using to look at the continuous IVs vs cat outcome of calc/no calc/no dist 
 
@@ -165,36 +174,40 @@ plt.show()
 #     h, p = stats.kruskal(r1, r2, r3, r4, nan_policy = 'omit')
 #     print('H stat: {:.1f}, pvalue: {}'.format(h, p))
 
-# y = 'tist_neighbors' # calling this 2 types - group TIST and 'neighbors' together types
+# y = 'tist_neighbors' # 3 types
 # for x in recov_cols:
 #     print(y, x)
 #     # separate into samples 
-#     #0 vs 1/2
-#     r1 = res.loc[(res[y] == 0), x]
-#     r2 = res.loc[(res[y] > 0), x]
-#     print('Median of Non-Tist: {:.2f}, Median of Tist/Neighbors: {:.2f}'.format(r1.median(skipna = True), r2.median(skipna = True)))
+#     #0 vs 1 vs 2
+#     other = res.loc[(res[y] == 0)&(res[x].notna()), x]
+#     neighbor = res.loc[(res[y] == 1)&(res[x].notna()), x]
+#     tist = res.loc[(res[y] == 2)&(res[x].notna()), x]
+#     print('Median of Non-Tist: {:.2f}, Median of Neighbors: {:.2f}, Median of TIST: {:.2f}'.format(other.median(), 
+#                                                                                                    neighbor.median(),
+#                                                                                                    tist.median()))
 #     #ignore nan values 
-#     h, p = stats.kruskal(r1, r2, nan_policy = 'omit')
+#     h, p = stats.kruskal(other, neighbor, tist, nan_policy = 'omit')
 #     print('H stat: {:.1f}, pvalue: {}'.format(h, p))
+
 
 #############################
 
 # MUST REDO THIS 
-cols_to_corr = ['mean_ndvi','stdev_ndvi','altitude','mean_res','stdev_res', 'yearly_precip_avg']
+# cols_to_corr = ['mean_ndvi','stdev_ndvi','altitude','mean_res','stdev_res', 'yearly_precip_avg']
 
-for y in new_col_names: #the categorical columns of calc/no calc/no dist
-    for x in cols_to_corr:
-        print(y, x)
-        # separate into samples 
-        r1 = res.loc[(res[y] == 'calc'), x]
-        r2 = res.loc[(res[y] =='no_calc'), x]
-        r3 = res.loc[(res[y] =='no_disturb'), x]
-        print('Median of Calc: {:.2f}, Median of No Disturb: {:.2f}, Median of No Calc: {:.2f}'.format(r1.median(skipna = True), 
-                                                                                                       r3.median(skipna = True),
-                                                                                                       r2.median(skipna = True)))
-        #ignore nan values 
-        h, p = stats.kruskal(r1, r2, r3, nan_policy = 'omit')
-        print('H stat: {:.1f}, pvalue: {:0.3f}'.format(h, p))
+# for y in new_col_names: #the categorical columns of calc/no calc/no dist
+#     for x in cols_to_corr:
+#         print(y, x)
+#         # separate into samples 
+#         r1 = res.loc[(res[y] == 'calc'), x]
+#         r2 = res.loc[(res[y] =='no_calc'), x]
+#         r3 = res.loc[(res[y] =='no_disturb'), x]
+#         print('Median of Calc: {:.2f}, Median of No Disturb: {:.2f}, Median of No Calc: {:.2f}'.format(r1.median(skipna = True), 
+#                                                                                                        r3.median(skipna = True),
+#                                                                                                        r2.median(skipna = True)))
+#         #ignore nan values 
+#         h, p = stats.kruskal(r1, r2, r3, nan_policy = 'omit')
+#         print('H stat: {:.1f}, pvalue: {:0.3f}'.format(h, p))
 #########################################
 # cols_to_corr = ['mean_ndvi','stdev_ndvi','altitude','mean_res','stdev_res', 'yearly_precip_avg']
 
@@ -215,27 +228,32 @@ for y in new_col_names: #the categorical columns of calc/no calc/no dist
 ## Recovery rate compared by county, recovery, and landcover type between TIST/neighbors/other
 
 # mask the 10s and 15s 
+# not_calc_mask = res[recov_cols] >= 10
+# #mask out the 10s and 15s
+# res[recov_cols] = res[recov_cols].mask(not_calc_mask, np.nan) #mask replaces values that are True (nan)
 
-not_calc_mask = res[recov_cols] >= 10
-#mask out the 10s and 15s
-res[recov_cols] = res[recov_cols].mask(not_calc_mask, np.nan) #mask replaces values that are True (nan)
-
-res[recov_cols] = res[recov_cols].abs() # Change the recovery to be positive
+# res[recov_cols] = res[recov_cols].abs() # Change the recovery to be positive
 
 y = 'tist_neighbors' #the categorical column 
 for x in recov_cols:
     for z in [10, 20, 30, 40]: #landcover types
         print(y, x, z)
         # separate into samples 
-        r1 = res.loc[((res[y] == 0) & (res['landcover'] == z)), x] #other
-        r2 = res.loc[((res[y] == 1) & (res['landcover'] == z)), x] #neighbors 
-        r3 = res.loc[((res[y] == 2) & (res['landcover'] == z)), x] #neighbors 
+        other = res.loc[((res[y] == 0) & (res['landcover'] == z) &(res[x].notna())), x]
+        neighbor = res.loc[((res[y] == 1) & (res['landcover'] == z)&(res[x].notna())), x]
+        tist = res.loc[((res[y] == 2) & (res['landcover'] == z)&(res[x].notna())), x]
 
-        print('Median of Other: {:.2f}, Median of Neighbors: {:.2f}, Median of TIST: {:.2f}'.format(r1.median(skipna = True), 
-                                                                            r2.median(skipna = True),
-                                                                            r3.median(skipna = True)))
-        #ignore nan values 
-        h, p = stats.kruskal(r1, r2, r3, nan_policy = 'omit')
+        print('Median of Other: {:.2f}, Median of Neighbors: {:.2f}, Median of TIST: {:.2f}'.format(other.median(), 
+                                                                            neighbor.median(),
+                                                                            tist.median()))
+
+        h, p = stats.kruskal(other, neighbor, tist, nan_policy = 'omit')
         print('H stat: {:.1f}, pvalue: {:0.3f}'.format(h, p))
+
+        # Dunn's posthoc to find significant differences
+        pvals = posthoc_dunn(res.loc[((res['landcover'] == z)&(res[x].notna())), [x, y]],
+                             val_col=x, group_col=y, p_adjust = 'bonferroni')
+        print(pvals)
+
 
 print('donezo')
