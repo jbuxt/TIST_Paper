@@ -31,17 +31,17 @@ landcover,eco,mean_ndvi,stdev_ndvi,alt,tist_neighbors, yearly_precip_avg'''
 recov_cols = ['recov_rate_59', 'recov_rate_77']
 recov_nums = [x[11:] for x in recov_cols] #strings
 n_recovs = len(recov_nums)
-new_col_names = ['cat_'+x for x in recov_nums]
+# new_col_names = ['cat_'+x for x in recov_nums]
 
 
 # assign categories for each recovery column 
-res[new_col_names] = 'calc'
-for n in range(n_recovs):
-    x = recov_cols[n]
-    y = new_col_names[n]
-    res.loc[(res[x] == 10.0), y] = 'no_calc'
-    res.loc[(res[x] == 15.0), y] = 'no_disturb'
-    res.loc[(res[x].isna()), y] = 'null'
+# res[new_col_names] = 'calc'
+# for n in range(n_recovs):
+#     x = recov_cols[n]
+#     y = new_col_names[n]
+#     res.loc[(res[x] == 10.0), y] = 'no_calc'
+#     res.loc[(res[x] == 15.0), y] = 'no_disturb'
+#     res.loc[(res[x].isna()), y] = 'null'
 
 # get tist and neighbors into same group 
 # res['tist_TF'] = res['tist_neighbors'] > 0 #true is TIST and neighbors
@@ -53,7 +53,7 @@ not_calc_mask = res[recov_cols] >= 10
 #mask out the 10s and 15s
 res[recov_cols] = res[recov_cols].mask(not_calc_mask, np.nan) #mask replaces values that are True (nan)
 
-res[recov_cols] = res[recov_cols].abs() # Change the recovery to be positive
+# res[recov_cols] = res[recov_cols].abs() # Change the recovery to be positive
 
 ##################################################################3333
 # Spearmans rank correlation 
@@ -227,17 +227,40 @@ res[recov_cols] = res[recov_cols].abs() # Change the recovery to be positive
 ##############################################
 ## Recovery rate compared by county, recovery, and landcover type between TIST/neighbors/other
 
-# mask the 10s and 15s 
-# not_calc_mask = res[recov_cols] >= 10
-# #mask out the 10s and 15s
-# res[recov_cols] = res[recov_cols].mask(not_calc_mask, np.nan) #mask replaces values that are True (nan)
 
-# res[recov_cols] = res[recov_cols].abs() # Change the recovery to be positive
 
+# res = res.loc[(res['human_mod']>1000)] # AND Get rid of anything with human mod < 1000
+
+# y = 'tist_neighbors' #the categorical column 
+# for x in recov_cols:
+#     for z in [10, 20, 30, 40]: #landcover types # AND Get rid of anything with human mod < 1000
+#         print(y, x, z)
+#         # separate into samples 
+#         other = res.loc[((res[y] == 0) & (res['landcover'] == z) &(res[x].notna())), x]
+#         neighbor = res.loc[((res[y] == 1) & (res['landcover'] == z)&(res[x].notna())), x]
+#         tist = res.loc[((res[y] == 2) & (res['landcover'] == z)&(res[x].notna())), x]
+
+#         print('Median of Other: {:.2f}, Median of Neighbors: {:.2f}, Median of TIST: {:.2f}'.format(other.median(), 
+#                                                                             neighbor.median(),
+#                                                                             tist.median()))
+
+#         h, p = stats.kruskal(other, neighbor, tist, nan_policy = 'omit')
+#         print('H stat: {:.1f}, pvalue: {:0.3f}'.format(h, p))
+
+#         # Dunn's posthoc to find significant differences
+#         pvals = posthoc_dunn(res.loc[((res['landcover'] == z)&(res[x].notna())), [x, y]],
+#                              val_col=x, group_col=y)
+#         print(pvals)
+
+######################################
 res = res.loc[(res['human_mod']>1000)] # AND Get rid of anything with human mod < 1000
 
+#make sure to mask all 10s and 15s
+res['pct_change_rate'] = (res['recov_rate_77'] - res['recov_rate_59']) / res['recov_rate_59']
+
+
 y = 'tist_neighbors' #the categorical column 
-for x in recov_cols:
+for x in ['pct_change_rate']:
     for z in [10, 20, 30, 40]: #landcover types # AND Get rid of anything with human mod < 1000
         print(y, x, z)
         # separate into samples 
