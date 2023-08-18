@@ -234,9 +234,11 @@ res[recov_cols] = res[recov_cols].abs() # Change the recovery to be positive
 
 # res[recov_cols] = res[recov_cols].abs() # Change the recovery to be positive
 
+res = res.loc[(res['human_mod']>1000)] # AND Get rid of anything with human mod < 1000
+
 y = 'tist_neighbors' #the categorical column 
 for x in recov_cols:
-    for z in [10, 20, 30, 40]: #landcover types
+    for z in [10, 20, 30, 40]: #landcover types # AND Get rid of anything with human mod < 1000
         print(y, x, z)
         # separate into samples 
         other = res.loc[((res[y] == 0) & (res['landcover'] == z) &(res[x].notna())), x]
@@ -252,7 +254,7 @@ for x in recov_cols:
 
         # Dunn's posthoc to find significant differences
         pvals = posthoc_dunn(res.loc[((res['landcover'] == z)&(res[x].notna())), [x, y]],
-                             val_col=x, group_col=y, p_adjust = 'bonferroni')
+                             val_col=x, group_col=y)
         print(pvals)
 
 
