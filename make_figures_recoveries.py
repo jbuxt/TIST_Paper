@@ -21,7 +21,7 @@ date_list = NDMA.index
 date_plus = pd.date_range(start='5/1/2013', periods=121, freq='MS') #need one that's +1 in length for the color graph 
 
 color_dict = {'Recovery':2, 'Alert':1, 'Alarm':0,'Normal':3}
-CMAP = ListedColormap(['red', 'orange', 'yellow', 'green'])
+CMAP = ListedColormap(['#A4367D', '#F8B25E', '#CAF357', '#71AF57'])
 bounds=[0,1,2,3,4]
 norm = BoundaryNorm(bounds, CMAP.N)
 #############################################
@@ -99,7 +99,7 @@ while True:
 
         cbar=fig.colorbar(cm.ScalarMappable(cmap=CMAP), ax=ax, 
                 location='top', shrink = 0.5,
-                pad=0.1, alpha=0.4, 
+                pad=0.1, alpha=0.6, 
                 label='NDMA Drought Status')
         cbar.set_ticks([0.12, 0.35, 0.62, 0.87])
         cbar.set_ticklabels(['Alarm', 'Alert', 'Recovery', 'Normal'])
