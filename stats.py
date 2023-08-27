@@ -53,7 +53,7 @@ not_calc_mask = res[recov_cols] >= 10
 #mask out the 10s and 15s
 res[recov_cols] = res[recov_cols].mask(not_calc_mask, np.nan) #mask replaces values that are True (nan)
 
-# res[recov_cols] = res[recov_cols].abs() # Change the recovery to be positive
+res[recov_cols] = res[recov_cols].abs() # Change the recovery to be positive
 
 ##################################################################3333
 # Spearmans rank correlation 
@@ -62,7 +62,7 @@ res[recov_cols] = res[recov_cols].mask(not_calc_mask, np.nan) #mask replaces val
 #MAKE SURE 10s and 15s masked and have positive recov rates 
 
 
-# cols_to_corr = ['mean_ndvi','stdev_ndvi','altitude','mean_res','stdev_res', 'yearly_precip_avg', 'pct_missing']
+cols_to_corr = ['mean_ndvi','stdev_ndvi','altitude','mean_res','stdev_res', 'yearly_precip_avg', 'pct_missing']
 
 # # ##ignores nans
 # spearmans = res.loc[:, recov_cols+cols_to_corr].corr(method = 'spearman')
@@ -76,28 +76,58 @@ res[recov_cols] = res[recov_cols].mask(not_calc_mask, np.nan) #mask replaces val
 # plt.tight_layout()
 # plt.show()
 
+## very annoyingly the scipy implementation is TERRIBLE with nan's but the pandas implementation
+## does not include any p values so need to pre-filter and break up the data
+for x in recov_cols:
+    rho, p = stats.spearmanr(res.loc[res[x].notna(), [x]+cols_to_corr].values, nan_policy = 'omit')
+    plt.figure()
+    sb.heatmap(rho, vmin=-1.0, vmax=1.0, cmap='PRGn', annot=True, 
+            fmt=".2f")
+    plt.xlabel([x]+cols_to_corr)
+    plt.ylabel([x]+cols_to_corr)
+    plt.xticks(rotation=90) 
+    plt.yticks(rotation=0) 
+    plt.title('Spearmans (SciPy) Correlation for Recoveries in '+county)
+    plt.tight_layout()
+    plt.show()
 
-# spearmanr = stats.spearmanr(res.loc[:, recov_cols+cols_to_corr], nan_policy = 'omit')
+    plt.figure()
 
-# plt.figure()
-# sb.heatmap(spearmanr.statistic, vmin=-1.0, vmax=1.0, cmap='PRGn', annot=True, 
-#             fmt=".2f")
-# plt.xticks(rotation=45) 
-# plt.yticks(rotation=45) 
-# plt.title('Spearmans (SciPy) Correlation for Recoveries in '+county)
-# plt.tight_layout()
-# plt.show()
+    sb.heatmap(p, vmin=0, vmax=0.1, cmap='Greens', annot=True, 
+                fmt=".4f")
+    plt.xlabel([x]+cols_to_corr)
+    plt.ylabel([x]+cols_to_corr)
+    plt.xticks(rotation=90) 
+    plt.yticks(rotation=0) 
+    plt.title('PValues from SciPy for Recoveries in '+county)
+    plt.tight_layout()
+    plt.show()
 
-# plt.figure()
+#get only the other chars which shouldn't have any nans
+rho, p= stats.spearmanr(res.loc[:, cols_to_corr].values, nan_policy = 'omit')
 
-# sb.heatmap(spearmanr.pvalue, vmin=0, vmax=1.0, cmap='Greens', annot=True, 
-#             fmt=".2f")
-# plt.xticks(rotation=90) 
-# plt.yticks(rotation=0) 
-# plt.title('PValues from SciPy for Recoveries in '+county)
-# plt.tight_layout()
-# plt.show()
+plt.figure()
+sb.heatmap(rho, vmin=-1.0, vmax=1.0, cmap='PRGn', annot=True, 
+        fmt=".2f")
+plt.xlabel(cols_to_corr)
+plt.ylabel(cols_to_corr)
+plt.xticks(rotation=90) 
+plt.yticks(rotation=0) 
+plt.title('Spearmans (SciPy) Correlation for Recoveries in '+county)
+plt.tight_layout()
+plt.show()
 
+plt.figure()
+
+sb.heatmap(p, vmin=0, vmax=0.1, cmap='Greens', annot=True, 
+            fmt=".4f")
+plt.xlabel(cols_to_corr)
+plt.ylabel(cols_to_corr)
+plt.xticks(rotation=90) 
+plt.yticks(rotation=0) 
+plt.title('PValues from SciPy for Recoveries in '+county)
+plt.tight_layout()
+plt.show()
 
 ###############################################################################
 # Chi squared test of independence
@@ -253,32 +283,32 @@ res[recov_cols] = res[recov_cols].mask(not_calc_mask, np.nan) #mask replaces val
 #         print(pvals)
 
 ######################################
-res = res.loc[(res['human_mod']>1000)] # AND Get rid of anything with human mod < 1000
+# res = res.loc[(res['human_mod']>1000)] # AND Get rid of anything with human mod < 1000
 
-#make sure to mask all 10s and 15s
-res['pct_change_rate'] = (res['recov_rate_77'] - res['recov_rate_59']) / res['recov_rate_59']
+# #make sure to mask all 10s and 15s
+# res['pct_change_rate'] = (res['recov_rate_77'] - res['recov_rate_59']) / res['recov_rate_59']
 
 
-y = 'tist_neighbors' #the categorical column 
-for x in ['pct_change_rate']:
-    for z in [10, 20, 30, 40]: #landcover types # AND Get rid of anything with human mod < 1000
-        print(y, x, z)
-        # separate into samples 
-        other = res.loc[((res[y] == 0) & (res['landcover'] == z) &(res[x].notna())), x]
-        neighbor = res.loc[((res[y] == 1) & (res['landcover'] == z)&(res[x].notna())), x]
-        tist = res.loc[((res[y] == 2) & (res['landcover'] == z)&(res[x].notna())), x]
+# y = 'tist_neighbors' #the categorical column 
+# for x in ['pct_change_rate']:
+#     for z in [10, 20, 30, 40]: #landcover types # AND Get rid of anything with human mod < 1000
+#         print(y, x, z)
+#         # separate into samples 
+#         other = res.loc[((res[y] == 0) & (res['landcover'] == z) &(res[x].notna())), x]
+#         neighbor = res.loc[((res[y] == 1) & (res['landcover'] == z)&(res[x].notna())), x]
+#         tist = res.loc[((res[y] == 2) & (res['landcover'] == z)&(res[x].notna())), x]
 
-        print('Median of Other: {:.2f}, Median of Neighbors: {:.2f}, Median of TIST: {:.2f}'.format(other.median(), 
-                                                                            neighbor.median(),
-                                                                            tist.median()))
+#         print('Median of Other: {:.2f}, Median of Neighbors: {:.2f}, Median of TIST: {:.2f}'.format(other.median(), 
+#                                                                             neighbor.median(),
+#                                                                             tist.median()))
 
-        h, p = stats.kruskal(other, neighbor, tist, nan_policy = 'omit')
-        print('H stat: {:.1f}, pvalue: {:0.3f}'.format(h, p))
+#         h, p = stats.kruskal(other, neighbor, tist, nan_policy = 'omit')
+#         print('H stat: {:.1f}, pvalue: {:0.3f}'.format(h, p))
 
-        # Dunn's posthoc to find significant differences
-        pvals = posthoc_dunn(res.loc[((res['landcover'] == z)&(res[x].notna())), [x, y]],
-                             val_col=x, group_col=y)
-        print(pvals)
+#         # Dunn's posthoc to find significant differences
+#         pvals = posthoc_dunn(res.loc[((res['landcover'] == z)&(res[x].notna())), [x, y]],
+#                              val_col=x, group_col=y)
+#         print(pvals)
 
 
 print('donezo')
