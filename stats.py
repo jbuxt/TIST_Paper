@@ -49,11 +49,11 @@ n_recovs = len(recov_nums)
 ##############################################33
 # mask the 10s and 15s 
 
-not_calc_mask = res[recov_cols] >= 10
-#mask out the 10s and 15s
-res[recov_cols] = res[recov_cols].mask(not_calc_mask, np.nan) #mask replaces values that are True (nan)
+# not_calc_mask = res[recov_cols] >= 10
+# #mask out the 10s and 15s
+# res[recov_cols] = res[recov_cols].mask(not_calc_mask, np.nan) #mask replaces values that are True (nan)
 
-res[recov_cols] = res[recov_cols].abs() # Change the recovery to be positive
+# res[recov_cols] = res[recov_cols].abs() # Change the recovery to be positive
 
 ##################################################################3333
 # Spearmans rank correlation 
@@ -62,7 +62,7 @@ res[recov_cols] = res[recov_cols].abs() # Change the recovery to be positive
 #MAKE SURE 10s and 15s masked and have positive recov rates 
 
 
-cols_to_corr = ['mean_ndvi','stdev_ndvi','altitude','mean_res','stdev_res', 'yearly_precip_avg', 'pct_missing']
+# cols_to_corr = ['mean_ndvi','stdev_ndvi','altitude','mean_res','stdev_res', 'yearly_precip_avg', 'pct_missing']
 
 # # ##ignores nans
 # spearmans = res.loc[:, recov_cols+cols_to_corr].corr(method = 'spearman')
@@ -78,56 +78,56 @@ cols_to_corr = ['mean_ndvi','stdev_ndvi','altitude','mean_res','stdev_res', 'yea
 
 ## very annoyingly the scipy implementation is TERRIBLE with nan's but the pandas implementation
 ## does not include any p values so need to pre-filter and break up the data
-for x in recov_cols:
-    rho, p = stats.spearmanr(res.loc[res[x].notna(), [x]+cols_to_corr].values, nan_policy = 'omit')
-    plt.figure()
-    sb.heatmap(rho, vmin=-1.0, vmax=1.0, cmap='PRGn', annot=True, 
-            fmt=".2f")
-    plt.xlabel([x]+cols_to_corr)
-    plt.ylabel([x]+cols_to_corr)
-    plt.xticks(rotation=90) 
-    plt.yticks(rotation=0) 
-    plt.title('Spearmans (SciPy) Correlation for Recoveries in '+county)
-    plt.tight_layout()
-    plt.show()
+# for x in recov_cols:
+#     rho, p = stats.spearmanr(res.loc[res[x].notna(), [x]+cols_to_corr].values, nan_policy = 'omit')
+#     plt.figure()
+#     sb.heatmap(rho, vmin=-1.0, vmax=1.0, cmap='PRGn', annot=True, 
+#             fmt=".2f")
+#     plt.xlabel([x]+cols_to_corr)
+#     plt.ylabel([x]+cols_to_corr)
+#     plt.xticks(rotation=90) 
+#     plt.yticks(rotation=0) 
+#     plt.title('Spearmans (SciPy) Correlation for Recoveries in '+county)
+#     plt.tight_layout()
+#     plt.show()
 
-    plt.figure()
+#     plt.figure()
 
-    sb.heatmap(p, vmin=0, vmax=0.1, cmap='Greens', annot=True, 
-                fmt=".4f")
-    plt.xlabel([x]+cols_to_corr)
-    plt.ylabel([x]+cols_to_corr)
-    plt.xticks(rotation=90) 
-    plt.yticks(rotation=0) 
-    plt.title('PValues from SciPy for Recoveries in '+county)
-    plt.tight_layout()
-    plt.show()
+#     sb.heatmap(p, vmin=0, vmax=0.1, cmap='Greens', annot=True, 
+#                 fmt=".4f")
+#     plt.xlabel([x]+cols_to_corr)
+#     plt.ylabel([x]+cols_to_corr)
+#     plt.xticks(rotation=90) 
+#     plt.yticks(rotation=0) 
+#     plt.title('PValues from SciPy for Recoveries in '+county)
+#     plt.tight_layout()
+#     plt.show()
 
-#get only the other chars which shouldn't have any nans
-rho, p= stats.spearmanr(res.loc[:, cols_to_corr].values, nan_policy = 'omit')
+# #get only the other chars which shouldn't have any nans
+# rho, p= stats.spearmanr(res.loc[:, cols_to_corr].values, nan_policy = 'omit')
 
-plt.figure()
-sb.heatmap(rho, vmin=-1.0, vmax=1.0, cmap='PRGn', annot=True, 
-        fmt=".2f")
-plt.xlabel(cols_to_corr)
-plt.ylabel(cols_to_corr)
-plt.xticks(rotation=90) 
-plt.yticks(rotation=0) 
-plt.title('Spearmans (SciPy) Correlation for Recoveries in '+county)
-plt.tight_layout()
-plt.show()
+# plt.figure()
+# sb.heatmap(rho, vmin=-1.0, vmax=1.0, cmap='PRGn', annot=True, 
+#         fmt=".2f")
+# plt.xlabel(cols_to_corr)
+# plt.ylabel(cols_to_corr)
+# plt.xticks(rotation=90) 
+# plt.yticks(rotation=0) 
+# plt.title('Spearmans (SciPy) Correlation for Recoveries in '+county)
+# plt.tight_layout()
+# plt.show()
 
-plt.figure()
+# plt.figure()
 
-sb.heatmap(p, vmin=0, vmax=0.1, cmap='Greens', annot=True, 
-            fmt=".4f")
-plt.xlabel(cols_to_corr)
-plt.ylabel(cols_to_corr)
-plt.xticks(rotation=90) 
-plt.yticks(rotation=0) 
-plt.title('PValues from SciPy for Recoveries in '+county)
-plt.tight_layout()
-plt.show()
+# sb.heatmap(p, vmin=0, vmax=0.1, cmap='Greens', annot=True, 
+#             fmt=".4f")
+# plt.xlabel(cols_to_corr)
+# plt.ylabel(cols_to_corr)
+# plt.xticks(rotation=90) 
+# plt.yticks(rotation=0) 
+# plt.title('PValues from SciPy for Recoveries in '+county)
+# plt.tight_layout()
+# plt.show()
 
 ###############################################################################
 # Chi squared test of independence
@@ -310,5 +310,53 @@ plt.show()
 #                              val_col=x, group_col=y)
 #         print(pvals)
 
+#########################################################
+# human mod differences between tree cover pixels in tist vs neighbors vs other
+# y = 'tist_neighbors' #the categorical column 
+# x = 'human_mod'
+# b = 'recov_rate_77' #need to filter to the calculated pixels for this recov period
+# for z in [10]: #landcover types 
+#         print(y, x, z)
+#         # separate into samples 
+#         other = res.loc[((res[y] == 0) & (res['landcover'] == z) &(res[b].notna())), x]
+#         neighbor = res.loc[((res[y] == 1) & (res['landcover'] == z)&(res[b].notna())), x]
+#         tist = res.loc[((res[y] == 2) & (res['landcover'] == z)&(res[b].notna())), x]
 
+#         print('Median of Other: {:.2f}, Median of Neighbors: {:.2f}, Median of TIST: {:.2f}'.format(other.median(), 
+#                                                                                 neighbor.median(),
+#                                                                                 tist.median()))
+
+#         h, p = stats.kruskal(other, neighbor, tist, nan_policy = 'omit')
+#         print('H stat: {:.1f}, pvalue: {:0.3f}'.format(h, p))
+
+#         # Dunn's posthoc to find significant differences
+#         pvals = posthoc_dunn(res.loc[((res['landcover'] == z)&(res[b].notna())), [x, y]],
+#                                 val_col=x, group_col=y)
+#         print(pvals)
+
+############################################
+# differences in chars across landcover types 
+
+
+y = 'landcover' #the categorical column 
+for x in ['mean_ndvi', 'altitude', 'yearly_precip_avg']:
+    print(y, x)
+    #10, 20, 30, 40
+    r1 = res.loc[(res[y] == 10), x] #trees
+    r2 = res.loc[(res[y] == 20), x] #shrubs
+    r3 = res.loc[(res[y] == 30), x] # grass
+    r4 = res.loc[(res[y] == 40), x] #crops
+    print('Median of Trees: {:.2f}, Median of Shrubs: {:.2f}, Median of Grass: {:.2f}, Median of Crops: {:.2f}'.format(r1.median(skipna = True), 
+                                                            r2.median(skipna = True),
+                                                            r3.median(skipna=True), 
+                                                            r4.median(skipna = True)))
+    #ignore nan values 
+    h, p = stats.kruskal(r1, r2, r3, r4, nan_policy = 'omit')
+    print('H stat: {:.1f}, pvalue: {}'.format(h, p))                                                                
+                                                                                        
+                
+    # Dunn's posthoc to find significant differences
+    pvals = posthoc_dunn(res.loc[:, [x, y]],
+                        val_col=x, group_col=y)
+    print(pvals)
 print('donezo')
