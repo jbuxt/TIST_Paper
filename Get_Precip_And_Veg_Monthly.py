@@ -2,22 +2,18 @@
 ## 2023
 ## basic pre-process and download from GEE to Google Drive
 
-import pandas as pd 
-# from IPython.display import display
-#import folium 
 import ee
 import google.auth
-import matplotlib.pyplot as plt
 from geetools import batch
-# ee.Authenticate()
-# ee.Initialize()
+
+# have to have used the GEE_start.py before hand to get the authenticaiton and initialization going 
 credentials, project_id = google.auth.default()
 ee.Initialize(credentials, project='ee-maddiehenderson12')
 
-## createshapes 
-#Get a rectangle that encompasses the region of interest
-ROI = ee.Geometry.Rectangle([36.11092694867859, -0.9639821313886587, 38.47870637456082, 0.8877151637669112])
-box_col = ee.FeatureCollection([ROI])
+
+#ROI
+box = ee.Geometry.Rectangle([36.11092694867859, -0.9639821313886587, 38.47870637456082, 0.8877151637669112])
+box_col = ee.FeatureCollection([box])
 
 task = batch.Export.table.toDriveShapefile(collection = box_col, folder='Shape_FINAL')
 
@@ -27,7 +23,48 @@ task = batch.Export.table.toDriveShapefile(collection = box_col, folder='Shape_F
 # #################################/
 # clip to area
 def clip_img(image):
-    return image.clip(ROI)
+    return image.clip(box)
+
+# Applies scaling factors for landsat 8 .
+def applyScaleFactors(image):
+    opticalBands = image.select('SR_B.').multiply(0.0000275).add(-0.2)
+    thermalBands = image.select('ST_B.*').multiply(0.00341802).add(149.0)
+    return image.addBands(opticalBands, None, True).addBands(thermalBands, None, True)
+
+# calculate and add an NDVI band for landsat 8
+def addNDVI(image):
+    return image.addBands(image.normalizedDifference(['SR_B5', 'SR_B4']).rename('NDVI'))
+#SR_B5 is surface reflectance near infrared, B4 is red landsat
+
+# compute MSAVI2 using expression for Landsat 8 
+def addmsavi2(image):
+    return image.addBands(image.expression(
+  '(2 * NIR + 1 - sqrt(pow((2 * NIR + 1), 2) - 8 * (NIR - RED)) ) / 2', 
+  {
+    'NIR': image.select('SR_B5'), 
+    'RED': image.select('SR_B4')
+  }).rename('MSAVI2'))
+
+# Mask clouds on Landsat 8 SR 
+def mask_clouds_landsat8(image):
+  # Bits 1-4 clouds / shadows
+  cloudsBitMask = (1<<3) #ee.Number(2).pow(3).int()# 1000 in base 2
+  dilatedCloudBitMask = (1<<1)
+  cirrusCloudBitMask = (1<<2)
+  cloudShadowBitMask = (1<<4)
+
+  # Get the pixel QA band
+  qa = image.select('QA_PIXEL')
+
+  # Both flags should be set to zero, indicating clear conditions
+  mask = qa.bitwiseAnd(cloudShadowBitMask).eq(0).And(
+      qa.bitwiseAnd(cloudsBitMask).eq(0)).And(
+      qa.bitwiseAnd(dilatedCloudBitMask).eq(0)).And(
+      qa.bitwiseAnd(cirrusCloudBitMask).eq(0))
+
+  return image.updateMask(mask)
+
+''' ## SENTINEL 2 FUNCTIONS
 
 # calculate and add an NDVI band
 def addNDVI(image):
@@ -48,22 +85,8 @@ def maskS2clouds(image):
       qa.bitwiseAnd(cirrusCloudBitMask).eq(0))
 
   return image.updateMask(mask).divide(10000)
-
-# # method for adding earth engine image tiles to folium map
-# def add_ee_layer(self, ee_image_object, vis_params, name):
-#     map_id_dict = ee.Image(ee_image_object).getMapId(vis_params)
-#     folium.raster_layers.TileLayer(
-#         tiles=map_id_dict['tile_fetcher'].url_format,
-#         attr='Map Data &copy; <a href="https://earthengine.google.com/">Google Earth Engine</a>',
-#         name=name,
-#         overlay=True,
-#         control=True
-#     ).add_to(self)
-
-# Add Earth Engine drawing method to folium.
-# folium.Map.add_ee_layer = add_ee_layer 
-
-# #create monthly totals from input image collection and convert to DF
+''' 
+### FOR CHIRPS PRECIPITATION TO CREATE MONTHLY SUMS
 # def monthlySum(collection, yrs, mos, geom, scale):
 #     totals_imgs = []
 #     # totals_arr = []
@@ -103,27 +126,6 @@ def monthlyMax(collection, yrs, mos):
     img_col = ee.ImageCollection.fromImages(maxes)
 
     return img_col 
-
-##############################
-# VIS PARAMS
-##############################
-# precipitationVis = {
-#   'min': 1.0,
-#   'max': 17.0,
-#   'palette': ['001137', '0aab1e', 'e7eb05', 'ff4a2d', 'e90000'],
-# }
-
-# ndviVis = {
-#   'min': -1, 
-#   'max': 1, 
-#   'palette': ['blue', 'white', 'green'] # sets the color ramp for displaying it 
-# }
-
-# rgbVis = {
-#  'bands': ['SR_B4', 'SR_B3', 'SR_B2'], # these are the RGB layers for landsat
-#   'min': 0.0,
-#   'max': 0.3
-# }
 
 ###################################
 #Begin
@@ -173,53 +175,23 @@ tasks = batch.Export.imagecollection.toDrive(collection= precip,
 '''
 ###############################################################################   
 #ADD NDVI and GET MONTHLY VALUES     
+#Import Landsat 8 
+ls = ee.ImageCollection('LANDSAT/LC08/C02/T1_L2').filterDate(start_date, end_date)\
+    .map(clip_img).map(applyScaleFactors)
 
-#Import Sentinel 2, mask clouds
-s2 = ee.ImageCollection("COPERNICUS/S2_HARMONIZED").filterDate(start_date, end_date)\
-    .map(clip_img).map(maskS2clouds)
- 
-ndvi = s2.map(addNDVI).select('NDVI')
+ndvi = ls.map(addNDVI).map(addmsavi2)
+#mask clouds
+ndvi_noclouds = ndvi.map(mask_clouds_landsat8).select('NDVI', 'MSAVI2')
 
-landcover = ee.ImageCollection("ESA/WorldCover/v100").first().clip(ROI)
-##ADD TO MAP
-# my_map.add_ee_layer(ndvi.select('NDVI').median(), ndviVis, 'NDVImedian')
-# my_map.add_ee_layer(ndvi.select('MSAVI2').median(), ndviVis, 'MSAVI2median')
-# my_map.add_ee_layer(ndvi_noclouds.select('NDVI').median(), ndviVis, 'NDVImedian_NC')
-# my_map.add_ee_layer(ndvi_noclouds.select('MSAVI2').median(), ndviVis, 'MSAVI2median_NC')
-# my_map.add_child(folium.LayerControl())
-# my_map.save('my_map.html')
-
- 
 #taken monthly maximums of NDVI as additional filter
-
 #need to specify the scale because it doesn't automatically keep that 
-# for sentinel2, the scale is 10 m and projection is epsg 32628
-veg = monthlyMax(ndvi, yrs, mos) 
+# for landsat, the scale is 30 m and projection is epsg 32628
+veg = monthlyMax(ndvi_noclouds, yrs, mos, box, 30, 'EPSG:4326') 
 
 #START HERE
 tasks = batch.Export.imagecollection.toDrive(collection=veg, 
-                                             folder='GEE_Veg_S2', 
+                                             folder='GEE_Veg', 
                                              namePattern= '{system_date}',
-                                             region=ROI, scale=10,
+                                             region=box, scale=30,
                                              crs = 'EPSG:4326',
-                                             datePattern='yyyyMMdd') 
-
-
-#plot monthly max NDVI+MSAVI2 over years  
-# plt.figure(1)
-# plt.plot(veg_df.datetime.dt.month, veg_df.NDVI, 'r', veg_df.datetime.dt.month, veg_df.MSAVI2, 'b')
-# plt.title('Monthly ndvi/msavi2 at point')
-# plt.xlabel('months')
-# plt.ylabel('index')
-# plt.legend()
-# plt.show()
-# #   #plot monthly ndvi over time
-# plt.figure(2)
-# plt.plot(veg_df.datetime, veg_df.NDVI, 'r', veg_df.datetime, veg_df.MSAVI2, 'b')
-# plt.title('Monthly ndvi/msavi2 at point over time')
-# plt.xlabel('months')
-# plt.ylabel('index')
-# plt.legend()
-# plt.show()
-#   #plot monthly ndvi by region
-#plot NDVI and Precip together
+                                             datePattern='yyyyMMdd')
