@@ -1,6 +1,6 @@
 # Maddie Henderson 
 ## 2023
-## import tif files
+## import tif files that were downloaded from GEE for each month
 ## and put pixels into a df through time
 ## apply tist, and county mask and mark pixels appropriately 
 ## and then put those pixels into separate lists 
@@ -41,24 +41,14 @@ with open('county_mask.pkl', 'rb') as file:
     ## 3 = Tharaka (22) 
     ## 4 = Nyeri (25)
 
-#IMPORT ECOREGIONS AND LANDCOVER MASK -- not used until later rn 
-#landcover_mask
-# with open('landcover_mask.pkl', 'rb') as file:
-#     landcover_mask = pickle.load(file)
-# #ecoregion_mask
-# with open('ecoregion_mask.pkl', 'rb') as file:
-#     ecoregion_mask = pickle.load(file)
+# Get lists of where each county is by index 
 
-# Get lists of where each county is by index AND where landcover <= 40 
-#only keeping grassland, shrubland, cropland, and forest
-#not sure if this works or need to do in 2 steps 
-county_idx = np.argwhere(county_mask == county_int) #and (landcover_mask <= 40))
+county_idx = np.argwhere(county_mask == county_int)
 
 del county_mask #save space
 
 with open('tist_mask.pkl', 'rb') as file:
     tist_mask = pickle.load(file)
-
 
 #################################################
 # Import tifs 
@@ -137,9 +127,7 @@ col_names = ['row','col', 'tist', 'county']+([date.strftime('%Y-%m') for date in
 
 # print('done with precip for '+ county)                   
 
-# now veg #####################################################################
-
-
+######################################################################
 # #Veg indices 
 dirname = './GEE_Veg_new'
 ndvi_df= pd.DataFrame(index=range(n_county),columns=col_names)
@@ -171,8 +159,6 @@ for y in range(start_yr, end_yr+1):
                     ndvi_df.at[p, 'col'] = j
                     ndvi_df.at[p, 'county'] = county_int
                     ndvi_df.at[p, 'tist'] = tist_mask[i, j]
-                    # ndvi_df.at[p, 'landcover'] = landcover_mask[i, j]
-                    # ndvi_df.at[p, 'ecoregion'] = ecoregion_mask[i, j]
                     ndvi_df.at[p, date] = im_array[i, j]
                     
                 else: #not the first image processed

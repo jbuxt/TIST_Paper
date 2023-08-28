@@ -1,4 +1,4 @@
-#make nice graphs of recoveries for specific pixels if you know row, col 
+#make nice graphs of recoveries for specific pixels if you know row, col, and county
 
 import matplotlib.pyplot as plt 
 import matplotlib.cm as cm

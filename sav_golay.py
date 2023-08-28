@@ -1,6 +1,7 @@
 # From 
 # Applies the method from Chen et al 2004 for NDVI time series reconstruction
 # slightly modified for my purposes
+## NOT USED IN FINAL IMPLEMENTATION
 
 import pandas as pd
 import numpy as np

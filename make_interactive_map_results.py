@@ -28,22 +28,21 @@ temp[:, 3] = 0.7 #set everything kinda transparent
 temp[0, :] = np.array([1,1,1,0]) #Set anything mapped to the min as transparent
 r_cm  = ListedColormap(temp)
 
+Purples = mpl.colormaps['Purples'] 
+temp1 = Purples(np.linspace(0,1,256))
+temp1[0, :] = np.array([1,1,1,0]) #Set anything mapped to 0 as transparent
+missing_cm = ListedColormap(temp1)
+
+
+YlOrRd = mpl.colormaps['YlOrRd'] 
+temp2 = YlOrRd(np.linspace(0,1,256))
+temp2[0, :] = np.array([1,1,1,0]) #Set anything mapped to 0 as transparent
+missing_pct_cm = ListedColormap(temp2) 
 
 #for the problematic ones 
 cmap = plt.get_cmap('PuOr', 2)
 cmap.set_under('#FFFFFF00')
 
-# data = np.random.rand(10,10)
-# data[:, 0:2] = 10
-# data[:, 2:4] = 11
-# data[:, 4:6] = 15
-# data[:, 6:8] = 20
-# data[:, 8:10] = 0
-
-# fig, ax = plt.subplots()
-# im = ax.imshow(data, cmap=cmap, vmin=10, vmax=15)
-# fig.colorbar(im, extend='min')
-# plt.show()
 
 ######################## # ##################################
 ##Make the pngs that get loaded later (only need to do once)
@@ -66,10 +65,7 @@ with rs.open('RESULTS/V2/ndvi_results_Nyeri_V2.tif') as im:
   nyeri = im.read() #
   nyeri_bands =im.descriptions
 np.nan_to_num(nyeri, copy=False, nan=-100)
-# with rs.open('RESULTS/V2/ndvi_results_Laikipia_V2.tif') as im:
-#   lai = im.read() #outside of county is nan
-    # lai_bands =im.descriptions
-#   np.nan_to_num(lai, copy=False, nan=0.0)
+
 with rs.open('RESULTS/V2/ndvi_results_Embu_V2.tif') as im:
   embu = im.read() #outside of county is nan
   embu_bands = im.descriptions

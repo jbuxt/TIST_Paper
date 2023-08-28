@@ -1,4 +1,8 @@
 def robust_stl(series, period, smooth_length=7):
+    '''
+    ## This is from Smith, Traxl, and Boers 2022
+    ##  https://doi.org/10.5281/zenodo.5816934.'''
+    
     from statsmodels.tsa.seasonal import STL
     def nt_calc(f,ns):
         '''Calcualte the length of the trend smoother based on
