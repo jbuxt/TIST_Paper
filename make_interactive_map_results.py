@@ -31,16 +31,12 @@ import pickle
 
 Green = mpl.colormaps['Greens']
 temp = Green(np.linspace(-1, 5, 256))
-# temp[:, 3] = 0.7 #set everything kinda transparent
 temp[0, :] = np.array([1,1,1,0]) #Set anything mapped to the min as transparent
 green_cm  = ListedColormap(temp)
 
-# Purples = mpl.colormaps['Purples'] 
-# temp1 = Purples(np.linspace(0,1,256))
-# temp1[0, :] = np.array([1,1,1,0]) #Set anything mapped to 0 as transparent
-# missing_cm = ListedColormap(temp1)
-
-
+other_cm = LinearSegmentedColormap.from_list( 'other_cm', [(0/15,    '#ffff0000'), #first one is transparent
+                                              (10/15, '#ffff66'),
+                                              (15/15,    '#0000ff')])
 # YlOrRd = mpl.colormaps['YlOrRd'] 
 # temp2 = YlOrRd(np.linspace(0,1,256))
 # temp2[0, :] = np.array([1,1,1,0]) #Set anything mapped to 0 as transparent
@@ -85,9 +81,13 @@ recov59[recov59 >= 5] =  5 #make everything more than 5 just 5 for the picture
 recov77_colors = green_cm( np.round(((recov77 - -1) * (1/(5 - -1) * 255)), 0).astype('int16')) #min -1 max 5 
 recov59_colors = green_cm( np.round(((recov59 - -1) * (1/(5 - -1) * 255)), 0).astype('int16')) #min -1 max 5 
 
+other77_colors = other_cm(others77/15)
+other59_colors = other_cm(others59/15)
 # # #Save as png 
-mpl.image.imsave('77_thar.png', recov77)
-mpl.image.imsave('59_thar.png', recov59)
+mpl.image.imsave('77_thar.png', recov77_colors)
+mpl.image.imsave('59_thar.png', recov59_colors)
+mpl.image.imsave('77_other.png', other77_colors)
+mpl.image.imsave('59_other.png', other59_colors)
 
 ###################################################################3
 # Define the center of map
@@ -103,9 +103,9 @@ t_bounds = [[-0.9639821313886587, 36.11092694867859], [0.8877151637669112, 38.47
 with open('tist_and_counties_gp.pkl', 'rb') as file:
    tist_gp, counties_gp= pickle.load(file)
 
-select = np.round(np.random.rand(5000) * 30000, 0).astype('int16')# get 5000 random tist groves
+# select = np.round(np.random.rand(5000) * 30000, 0).astype('int16')# get 5000 random tist groves
 #reduced for putting on web
-tist_gp = tist_gp.loc[select, ['Trees', 'Name', 'geometry']]
+tist_gp = tist_gp.loc[tist_gp['COUNTY' == 'Tharaka'], ['Trees', 'Name', 'geometry']] #get only those in Tharaka 
 
 
 f.GeoJson(tist_gp, name='TIST Groves',
