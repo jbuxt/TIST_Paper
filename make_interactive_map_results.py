@@ -3,21 +3,22 @@
 '''
 ### TODO
 # https://stackoverflow.com/questions/58227034/png-image-not-being-displayed-on-folium-map
-# Display a graph of the recovery rate at selected points?? could be very fun 
+# Display a graph of the recovery rate at selected points
 # add colorbar that's not ugly
 # popup color https://stackoverflow.com/questions/62789558/is-it-possible-to-change-the-popup-background-colour-in-folium
 
+# colorbar from my own image 
+zoom level better
+names shorter and bettter 
+example graphs 
+change color of TIST groves fill (no fill?) 
+Did i already remove the roads etc from this ?? or are they so light? is this exposing more method flaws lol
 
-for final results page want 
-- can use existing images for some parts of page - examples, all results 
-- for map for use -  could limit to meru and tharaka for speed/size
---- for colormap, do separate layers for valid calc, invalid calc 
-- have 59, 77 as toggle layers, background google satellite, sample of TIST groves, and several
-  points with example plots that can be pulled up 
 '''
 # import pandas as pd 
 import folium as f
 from folium.features import GeoJsonPopup, GeoJsonTooltip
+from folium.plugins import FloatImage
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 import rasterio as rs
@@ -29,14 +30,14 @@ import pickle
 ###############################
 #STYLE 
 
-Green = mpl.colormaps['Greens']
-temp = Green(np.linspace(-1, 5, 256))
-temp[0, :] = np.array([1,1,1,0]) #Set anything mapped to the min as transparent
-green_cm  = ListedColormap(temp)
+# Green = mpl.colormaps['Greens']
+# temp = Green(np.linspace(-1, 5, 256))
+# temp[0, :] = np.array([1,1,1,0]) #Set anything mapped to the min as transparent
+# green_cm  = ListedColormap(temp)
 
-other_cm = LinearSegmentedColormap.from_list( 'other_cm', [(0/15,    '#ffff0000'), #first one is transparent
-                                              (10/15, '#ffff66'),
-                                              (15/15,    '#0000ff')])
+# other_cm = LinearSegmentedColormap.from_list( 'other_cm', [(0/15,    '#ffff0000'), #first one is transparent
+#                                               (10/15, '#ffff66'),
+#                                               (15/15,    '#0000ff')])
 # YlOrRd = mpl.colormaps['YlOrRd'] 
 # temp2 = YlOrRd(np.linspace(0,1,256))
 # temp2[0, :] = np.array([1,1,1,0]) #Set anything mapped to 0 as transparent
@@ -93,18 +94,20 @@ other_cm = LinearSegmentedColormap.from_list( 'other_cm', [(0/15,    '#ffff0000'
 # Define the center of map
 lon, lat = 37.79, -0.24  #EDIT THIS TO BE ON THARAKA # 37.61, 0.18 for overall map
 
-my_map = f.Map(location=[lat, lon], zoom_start=9)
+my_map = f.Map(location=[lat, lon], zoom_start=10)
 
 tile = f.TileLayer(
         tiles = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
         attr = 'Esri',
         name = 'Esri Satellite',
         overlay = False,
-        control = True
+        control = True, 
+        show = True
        ).add_to(my_map)
 
 #for all the bounding boxes of images in the ROI
-t_bounds = [[-0.9639821313886587, 36.11092694867859], [0.8877151637669112, 38.47870637456082]]
+# t_bounds = [[-0.9639821313886587, 36.11092694867859], [0.8877151637669112, 38.47870637456082]] #original ROI
+t_bounds = [[-0.470,37.400],[0.100, 38.300]] #for tharaka pngs from QGIS
 
 ############################################################
 # TIST groves and counties
@@ -118,7 +121,7 @@ tist_gp = tist_gp.loc[tist_gp['COUNTY'] == 'Tharaka', ['Trees', 'Name', 'geometr
 
 
 f.GeoJson(tist_gp, name='TIST Groves',
-        style_function= lambda x: {"fillColor": "#00cc66", "fillOpacity": 0.3,
+        style_function= lambda x: {"fillColor": "#00cc66", "fillOpacity": 0.0,
                                    "weight": 1, "color": "#000000"}).add_to(my_map)
 
 
@@ -126,36 +129,23 @@ f.GeoJson(tist_gp, name='TIST Groves',
 # RASTER LAYERS
 
 
-
-f.raster_layers.ImageOverlay('59_thar.png', 
+f.raster_layers.ImageOverlay('./external_programs/thar_highres.png', 
                   bounds=t_bounds, #[[lat_min, lon_min], [lat_max, lon_max]]
-                  name = 'Recovery rate for Recovery 59',
+                  name = 'Recovery rates 77 (Oct 2019)',
                   overlay = True,
-                  control = True
+                  control = True, 
+                  show = True, 
                   ).add_to(my_map)
 
 
-f.raster_layers.ImageOverlay('77_thar.png',
-                  bounds=t_bounds, #[[lat_min, lon_min], [lat_max, lon_max]
-                  name = 'Recovery rate for Recovery 77',
-                  overlay = True,
-                  control = True
-                  ).add_to(my_map)
-
-f.raster_layers.ImageOverlay('59_other.png', 
-                  bounds=t_bounds, #[[lat_min, lon_min], [lat_max, lon_max]]
-                  name = 'No disturbance / no calculation for Recovery 59',
-                  overlay = True,
-                  control = True                  
-                  ).add_to(my_map)
+# f.raster_layers.ImageOverlay('77_thar.png',
+#                   bounds=t_bounds, #[[lat_min, lon_min], [lat_max, lon_max]
+#                   name = 'Recovery rate for Recovery 77',
+#                   overlay = True,
+#                   control = True
+#                   ).add_to(my_map)
 
 
-f.raster_layers.ImageOverlay('77_other.png',
-                  bounds=t_bounds, #[[lat_min, lon_min], [lat_max, lon_max]
-                  name = 'No disturbance / no calculation for Recovery 77',
-                  overlay = True,
-                  control = True  
-                  ).add_to(my_map)
 
 ###############################################################
 # FINISH AND SAVE
@@ -171,10 +161,13 @@ f.raster_layers.ImageOverlay('77_other.png',
 
 
 
+
 # my_map.get_root().header.add_child(f.Element(cmap_style))
 
-
+FloatImage('legend_results_small.png', bottom=3, right=3).add_to(my_map)
 f.map.LayerControl().add_to(my_map)
+
+
 
 # my_map.get_root().html.add_child(f.Element(cmap_HTML))
 
