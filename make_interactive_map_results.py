@@ -25,7 +25,7 @@ import base64
 
 ###################################################3
 # Define the center of map
-lon, lat = 37.79, -0.24  #EDIT THIS TO BE ON THARAKA # 37.61, 0.18 for overall map
+lon, lat = 37.79, -0.24  #tharaka center ish # 37.61, 0.18 for overall map
 
 tile = f.TileLayer(
         tiles = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
@@ -36,7 +36,7 @@ tile = f.TileLayer(
         show = True, 
        )
 
-my_map = f.Map(location=[lat, lon], zoom_start=10, tiles = tile)
+my_map = f.Map(location=[lat, lon], zoom_start=11, tiles = tile)
 
 #for all the bounding boxes of images in the ROI
 # t_bounds = [[-0.9639821313886587, 36.11092694867859], [0.8877151637669112, 38.47870637456082]] #original ROI
@@ -79,6 +79,8 @@ f.raster_layers.ImageOverlay('./external_programs/thar_highres.png',
 
 ################################################################
 # EXAMPLE GRAPHS
+## https://stackoverflow.com/questions/58032813/displaying-image-on-folium-marker-pop-up?rq=3
+
 width = 560
 height = 330
 loc1 = [-0.310604, 37.807015]
@@ -99,12 +101,14 @@ icon = f.Icon(color="purple", icon = 'comment')
 marker = f.Marker(location=loc1, popup=popup, icon=icon)
 marker.add_to(my_map)
 
+##############################################################
+# LEGEND
+FloatImage('legend_smaller.svg', bottom=1, left=1, width='180px', height='66px').add_to(my_map)
+#colormap legend since its kinda hard to make te he 
+
 
 ###############################################################
 # FINISH AND SAVE
-
-FloatImage('legend_smaller.png', bottom=1, left=1).add_to(my_map)
-#colormap legend since its kinda hard to make te he 
 
 f.map.LayerControl().add_to(my_map)
 
