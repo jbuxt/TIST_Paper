@@ -80,11 +80,19 @@ f.raster_layers.ImageOverlay('./external_programs/thar_highres.png',
 ################################################################
 # EXAMPLE GRAPHS
 width = 560
-height = 340
+height = 330
 loc1 = [-0.310604, 37.807015]
 encoded = base64.b64encode(open('ex_graph1.png', 'rb').read())
+
+''' #PNG html version -- leads to much worse quality
 html = '<img src="data:image/png;base64,{}">'.format
 iframe = IFrame(html(encoded.decode("UTF-8")), width=(width)+20, height=(height)+20)
+'''
+## SVG version
+svg = """
+<object data="data:image/png;base64,{}" width="{}" height="{} type="image/svg+xml">
+</object>""".format
+iframe = IFrame(svg(encoded.decode('UTF-8'), width, height) , width=width+20, height=height+20)
 popup = f.Popup(iframe, max_width=2650)
 
 icon = f.Icon(color="purple", icon = 'comment')
