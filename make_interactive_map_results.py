@@ -79,12 +79,12 @@ f.raster_layers.ImageOverlay('./external_programs/thar_highres.png',
 
 ################################################################
 # EXAMPLE GRAPHS
-width = 608
-height = 348
+width = 560
+height = 340
 loc1 = [-0.310604, 37.807015]
 encoded = base64.b64encode(open('ex_graph1.png', 'rb').read())
 html = '<img src="data:image/png;base64,{}">'.format
-iframe = IFrame(html(encoded), width=(width)+20, height=(height)+20)
+iframe = IFrame(html(encoded.decode("UTF-8")), width=(width)+20, height=(height)+20)
 popup = f.Popup(iframe, max_width=2650)
 
 icon = f.Icon(color="purple", icon = 'comment')
