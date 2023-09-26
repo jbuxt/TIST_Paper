@@ -103,8 +103,12 @@ marker.add_to(my_map)
 
 ##############################################################
 # LEGEND
-FloatImage('legend_smaller.svg', bottom=1, left=1, width='180px', height='66px').add_to(my_map)
+# could not get this to encode a png the same way and not lose quality etc 
+
+FloatImage('https://raw.githubusercontent.com/ml-henderson/ml-henderson.github.io/main/assets/img/legend_smaller.svg', 
+           bottom=1, left=1, width='180px', height='66px').add_to(my_map)
 #colormap legend since its kinda hard to make te he 
+#
 
 
 ###############################################################
