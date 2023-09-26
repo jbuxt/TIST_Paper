@@ -80,26 +80,31 @@ f.raster_layers.ImageOverlay('./external_programs/thar_highres.png',
 ################################################################
 # EXAMPLE GRAPHS
 ## https://stackoverflow.com/questions/58032813/displaying-image-on-folium-marker-pop-up?rq=3
-
-width = 560
-height = 330
-loc1 = [-0.310604, 37.807015]
-encoded = base64.b64encode(open('ex_graph1.png', 'rb').read())
-
 ''' #PNG html version -- leads to much worse quality
 html = '<img src="data:image/png;base64,{}">'.format
 iframe = IFrame(html(encoded.decode("UTF-8")), width=(width)+20, height=(height)+20)
 '''
-## SVG version
-svg = """
-<object data="data:image/png;base64,{}" width="{}" height="{} type="image/svg+xml">
-</object>""".format
-iframe = IFrame(svg(encoded.decode('UTF-8'), width, height) , width=width+20, height=height+20)
-popup = f.Popup(iframe, max_width=2650)
 
-icon = f.Icon(color="purple", icon = 'comment')
-marker = f.Marker(location=loc1, popup=popup, icon=icon)
-marker.add_to(my_map)
+width = 560
+height = 330
+locs = [[-0.310604, 37.807015],
+        [-0.131087, 38.075387],
+        [-0.131097, 38.075146],
+        [-0.117950, 38.050380],
+        [-0.253500, 37.815370],
+        [-0.227337, 37.637490],
+        [-0.222030, 37.586240]]
+
+for i in range(1,8):
+  encoded = base64.b64encode(open('ex_graph'+str(i)+'.png', 'rb').read())
+  ## SVG version
+  svg = """
+  <object data="data:image/png;base64,{}" width="{}" height="{} type="image/svg+xml">
+  </object>""".format
+  iframe = IFrame(svg(encoded.decode('UTF-8'), width, height) , width=width+20, height=height+20)
+
+  marker = f.Marker(location=locs[i-1], popup=f.Popup(iframe, max_width=2650), 
+                  icon=f.Icon(color="purple", icon = 'comment')).add_to(my_map)
 
 ##############################################################
 # LEGEND
