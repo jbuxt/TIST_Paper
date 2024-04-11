@@ -7,8 +7,9 @@ import google.auth
 from geetools import batch
 
 # have to have used the GEE_start.py before hand to get the authenticaiton and initialization going 
-credentials, project_id = google.auth.default()
-ee.Initialize(credentials, project='ee-maddiehenderson12')
+#credentials, project_id = google.auth.default()
+#ee.Initialize(credentials, project='ee-maddiehenderson12')
+ee.Initialize(project='ee-joshuabuxton2018')
 
 
 #ROI
@@ -188,10 +189,15 @@ ndvi_noclouds = ndvi.map(mask_clouds_landsat8).select('NDVI', 'MSAVI2')
 # for landsat, the scale is 30 m and projection is epsg 32628
 veg = monthlyMax(ndvi_noclouds, yrs, mos, box, 30, 'EPSG:4326') 
 
+veg = monthlyMax(ndvi_noclouds, yrs, mos)
+
+
 #START HERE
 tasks = batch.Export.imagecollection.toDrive(collection=veg, 
                                              folder='GEE_Veg', 
                                              namePattern= '{system_date}',
-                                             region=box, scale=30,
+                                             region=box.geometries(), 
+                                             scale=30,
                                              crs = 'EPSG:4326',
                                              datePattern='yyyyMMdd')
+                                             
